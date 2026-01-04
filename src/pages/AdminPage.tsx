@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink, Copy, Check, Trash2, Edit2, Plus, Settings, ListFilter, LayoutDashboard, Info, Lightbulb } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, Trash2, Edit2, Plus, Settings, ListFilter, LayoutDashboard, Info, Lightbulb, LogOut } from "lucide-react";
 import { FormItemLayout } from "@/components/common/FormItemLayout";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ export const AdminPage = () => {
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
 
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSubmissions();
@@ -186,6 +188,15 @@ export const AdminPage = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Sessão encerrada",
+      description: "Você saiu do painel administrativo.",
+    });
+    navigate('/login');
+  };
+
   const handleSendToWebhook = async (submission: any) => {
     const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
     if (!webhookUrl) {
@@ -252,8 +263,17 @@ export const AdminPage = () => {
             </div>
             <h1 className="font-medium tracking-tight">Chronos • Anotaê!</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
+            <Button 
+              variant="ghost" 
+              size="tiny" 
+              onClick={handleLogout}
+              className="text-muted-foreground hover:text-destructive transition-colors gap-1 px-3"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
           </div>
         </div>
       </div>

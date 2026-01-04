@@ -2,13 +2,23 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { EventForm } from '@/pages/EventForm';
 import { SuccessPage } from '@/pages/SuccessPage';
 import { AdminPage } from '@/pages/AdminPage';
+import { LoginPage } from '@/pages/LoginPage';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/chronosadminpage" element={<AdminPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route 
+          path="/chronosadminpage" 
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/evento/:token" element={<EventForm />} />
         <Route path="/sucesso" element={<SuccessPage />} />
         {/* Rota de teste ou redirecionamento */}
