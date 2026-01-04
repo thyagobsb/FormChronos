@@ -34,10 +34,10 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
         <CardHeader className={cn(isPrincipal ? "pb-4" : "py-3")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Badge className={cn(isPrincipal ? "bg-primary" : "bg-muted text-muted-foreground", "font-bold")}>
+              <Badge className={cn(isPrincipal ? "bg-primary" : "bg-muted text-muted-foreground", "font-medium")}>
                 {num}
               </Badge>
-              <CardTitle className="text-lg font-semibold text-primary">{title}</CardTitle>
+              <CardTitle className="text-lg font-medium text-primary">{title}</CardTitle>
             </div>
             {!isPrincipal && (
               <div className="flex items-center transition-all">
@@ -120,7 +120,7 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
                   {releaseLabel}
                 </label>
                 <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-wider",
+                  "text-[9px] font-medium uppercase tracking-wider",
                   (watch(`atracoes.${key}.release` as any)?.length || 0) > 1000 ? "text-red-500" : "text-primary bg-primary/10 px-1.5 py-0.5 rounded"
                 )}>
                   {watch(`atracoes.${key}.release` as any)?.length || 0} / 1000
@@ -141,7 +141,7 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {renderAtracao(1, true)}
       {[2, 3, 4].map((num) => renderAtracao(num))}
     </div>

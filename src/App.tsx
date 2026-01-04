@@ -9,7 +9,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/chronosadminpage" element={<AdminPage />} />
-        <Route path="/:token" element={<EventForm />} />
+        <Route path="/evento/:token" element={<EventForm />} />
         <Route path="/sucesso" element={<SuccessPage />} />
         {/* Rota de teste ou redirecionamento */}
         <Route path="/" element={

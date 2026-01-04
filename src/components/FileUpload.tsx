@@ -127,7 +127,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             </div>
             {dimensions && (
               <div className="mt-1 flex justify-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
                   Dimensão ideal: {dimensions}
                 </span>
               </div>

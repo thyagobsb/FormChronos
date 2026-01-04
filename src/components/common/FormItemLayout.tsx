@@ -110,7 +110,7 @@ export const FormItemLayout = React.forwardRef<HTMLDivElement, FormItemLayoutPro
           </div>
           <div className={cn(labelContainerVariants({ layout }))}>
             {hasLabel && (
-              <Label className={cn("text-foreground flex gap-2 items-center", error && "text-destructive")} htmlFor={name}>
+              <Label className={cn("text-muted-foreground flex gap-2 items-center", error && "text-destructive")} htmlFor={name}>
                 <LabelContent />
               </Label>
             )}
@@ -125,7 +125,7 @@ export const FormItemLayout = React.forwardRef<HTMLDivElement, FormItemLayoutPro
         {(hasLabel || labelOptional) && (
           <div className={cn(labelContainerVariants({ layout }))}>
             {hasLabel && (
-              <Label className={cn("text-foreground flex gap-2 items-center", error && "text-destructive")} htmlFor={name}>
+              <Label className={cn("text-muted-foreground flex gap-2 items-center", error && "text-destructive")} htmlFor={name}>
                 <LabelContent />
               </Label>
             )}

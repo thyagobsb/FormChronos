@@ -16,7 +16,8 @@ import { Step1LinhaVisual } from '@/components/steps/Step1LinhaVisual';
 import { Step2Evento } from '@/components/steps/Step2Evento';
 import { Step3Atracoes } from '@/components/steps/Step3Atracoes';
 import { Step4Areas } from '@/components/steps/Step4Areas';
-import { Loader2, AlertCircle, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, CheckCircle2, Circle, Lightbulb } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Passos (Componentes serão importados depois)
 const STEPS = [
@@ -126,7 +127,9 @@ export const EventForm = () => {
         .insert([{
           token,
           data,
-          submitted_at: new Date().toISOString()
+          submitted_at: new Date().toISOString(),
+          genero_musical_id: data.evento.genero_musical_id,
+          ticketeira_id: data.evento.ticketeira_id
         }]);
 
       if (dbError) {
@@ -183,7 +186,7 @@ export const EventForm = () => {
           <CardContent className="pt-6 text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
             <div className="space-y-1">
-              <h1 className="text-xl font-bold">Erro de Acesso</h1>
+              <h1 className="text-xl font-medium">Erro de Acesso</h1>
               <p className="text-muted-foreground">{error}</p>
             </div>
             <Button variant="outline" onClick={() => navigate('/')} className="w-full">
@@ -199,28 +202,31 @@ export const EventForm = () => {
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Header Fixo */}
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="font-extrabold text-background">C</span>
             </div>
-            <h1 className="font-bold tracking-tight">Chronos • Anotaê!</h1>
+            <h1 className="font-medium tracking-tight">Chronos • Anotaê!</h1>
           </div>
-          <AutoSaveIndicator status={saveStatus} />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <AutoSaveIndicator status={saveStatus} />
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-8 mt-8">
+      <div className="max-w-7xl mx-auto px-8 mt-8">
         <Stepper steps={STEPS} currentStep={currentStep} />
 
         <div className="mt-8 mb-6 space-y-4">
           <div className="space-y-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-medium uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded">
                 Passo {currentStep + 1} de 4
               </span>
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight">{STEPS[currentStep]}</h2>
+            <h2 className="text-3xl font-medium tracking-tight">{STEPS[currentStep]}</h2>
             <p className="text-muted-foreground text-sm">
               {currentStep === 0 && "Informações fundamentais sobre data, local e ticketing."}
               {currentStep === 1 && "Destaque as principais atrações do line-up."}
@@ -236,13 +242,14 @@ export const EventForm = () => {
             {currentStep === 2 && <Step4Areas form={form} />}
             {currentStep === 3 && <Step1LinhaVisual form={form} />}
 
-            <div className="flex items-center justify-between mt-8 pt-4">
+            <div className="flex items-center justify-between">
               <Button 
                 type="button" 
                 variant="ghost" 
+                size="sm"
                 onClick={handleBack}
                 disabled={currentStep === 0 || isLoading}
-                className="font-semibold"
+                className="gap-2"
               >
                 Anterior
               </Button>
@@ -250,10 +257,11 @@ export const EventForm = () => {
               {currentStep < 3 ? (
                   <Button 
                     type="button"
-                    variant={'outline'} 
+                    variant="default" 
+                    size="sm"
                     onClick={handleNext}
                     disabled={isLoading}
-                    className="font-bold px-8 bg-primary hover:bg-primary/90 text-primary-foreground h-11 border border-primary/20 shadow-sm shadow-primary/10 hover:shadow-primary/20 active:scale-[0.98] transition-all duration-200"
+                    className="gap-2 px-8"
                   >
                     Próximo
                   </Button>
@@ -261,9 +269,11 @@ export const EventForm = () => {
                 <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
                     <Button 
                       type="button" 
+                      variant="default"
+                      size="sm"
                       onClick={() => setShowConfirmDialog(true)}
                       disabled={isLoading}
-                      className="font-bold px-8 bg-primary hover:bg-primary/90 text-primary-foreground h-11 border border-primary/20 shadow-sm shadow-primary/10 hover:shadow-primary/20 active:scale-[0.98] transition-all duration-200"
+                      className="gap-2 px-8"
                     >
                     {isLoading ? (
                       <>
@@ -274,7 +284,7 @@ export const EventForm = () => {
                   </Button>
                   <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-full bg-background border-border text-foreground p-0">
                   <DialogHeader className="p-8 border-b border-border/50 sticky top-0 bg-background z-10">
-                    <DialogTitle className="text-2xl font-bold text-center">Confirmar Envio</DialogTitle>
+                    <DialogTitle className="text-2xl font-medium text-center">Confirmar Envio</DialogTitle>
                     <DialogDescription className="sr-only">
                       Confirmação final dos dados do evento antes do envio.
                     </DialogDescription>
@@ -283,64 +293,64 @@ export const EventForm = () => {
                   <div className="p-8 space-y-6">
                             {/* 1. DADOS DO EVENTO */}
                             <div className="space-y-4">
-                              <h4 className="font-bold text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Dados do Evento</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Dados do Evento</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-sm">
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Evento</span>
-                                  <span className="text-muted-foreground font-semibold block">{form.getValues("evento.nome_evento") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Nome do Evento</span>
+                                  <span className="text-foreground font-semibold block">{form.getValues("evento.nome_evento") || '-'}</span>
                                 </div>
                                 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Data</span>
-                                  <span className="text-muted-foreground font-semibold block">
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Data</span>
+                                  <span className="text-foreground font-semibold block">
                                     {form.getValues("evento.data_evento") ? new Date(form.getValues("evento.data_evento")).toLocaleDateString('pt-BR') : '-'} 
                                   </span>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Local</span>
-                                  <span className="text-muted-foreground font-semibold block">{form.getValues("evento.local") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Local</span>
+                                  <span className="text-foreground font-semibold block">{form.getValues("evento.local") || '-'}</span>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Horários</span>
-                                  <div className="flex flex-wrap gap-x-4 gap-y-1 font-medium text-muted-foreground">
-                                    <span className="flex items-center gap-1.5"><span className="text-foreground text-[10px] uppercase font-bold">Iní</span> {form.getValues("evento.hora_inicio_evento") || '-'}</span>
-                                    <span className="flex items-center gap-1.5"><span className="text-foreground text-[10px] uppercase font-bold">Tér</span> {form.getValues("evento.hora_termino_evento") || '-'}</span>
-                                    <span className="flex items-center gap-1.5"><span className="text-foreground text-[10px] uppercase font-bold">Abe</span> {form.getValues("evento.abertura_portoes") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Horários</span>
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1 font-medium text-foreground">
+                                    <span className="flex items-center gap-1.5"><span className="text-muted-foreground text-[10px] uppercase font-medium">Iní</span> {form.getValues("evento.hora_inicio_evento") || '-'}</span>
+                                    <span className="flex items-center gap-1.5"><span className="text-muted-foreground text-[10px] uppercase font-medium">Tér</span> {form.getValues("evento.hora_termino_evento") || '-'}</span>
+                                    <span className="flex items-center gap-1.5"><span className="text-muted-foreground text-[10px] uppercase font-medium">Abe</span> {form.getValues("evento.abertura_portoes") || '-'}</span>
                                   </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Endereço</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Endereço</span>
                                   <div className="flex flex-col">
-                                    <span className="text-muted-foreground font-semibold">{form.getValues("evento.cidade")}/{form.getValues("evento.estado")}</span>
-                                    <span className="text-xs text-muted-foreground/60 leading-tight">{form.getValues("evento.localizacao_endereco") || '-'}</span>
+                                    <span className="text-foreground font-semibold">{form.getValues("evento.cidade")}/{form.getValues("evento.estado")}</span>
+                                    <span className="text-xs text-foreground/60 leading-tight">{form.getValues("evento.localizacao_endereco") || '-'}</span>
                                   </div>
                                 </div>
                                 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Classificação</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Classificação</span>
                                   <div>
                                     <span className="text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded text-xs inline-block">{form.getValues("evento.classificacao") || '-'}</span>
                                   </div>
                                 </div>
                                 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Gênero</span>
-                                  <span className="text-muted-foreground font-semibold block">
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Gênero</span>
+                                  <span className="text-foreground font-semibold block">
                                     {form.getValues("evento.genero_evento") === "Outro" ? form.getValues("evento.genero_evento_outro") : form.getValues("evento.genero_evento")}
                                   </span>
                                 </div>
                                 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Ticketeira</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Ticketeira</span>
                                   <div className="flex flex-col">
-                                    <span className="text-muted-foreground font-semibold">
+                                    <span className="text-foreground font-semibold">
                                       {form.getValues("evento.ticketeira") === "Outra" ? form.getValues("evento.nome_ticketeira_outra") : form.getValues("evento.ticketeira")}
                                     </span>
                                     {form.getValues("evento.logo_ticketeira_outra") && (
-                                      <span className="text-[10px] text-green-500 font-bold flex items-center gap-1 mt-0.5">
+                                      <span className="text-[10px] text-green-500 font-medium flex items-center gap-1 mt-0.5">
                                         <CheckCircle2 className="h-3 w-3" /> Logo OK
                                       </span>
                                     )}
@@ -348,25 +358,30 @@ export const EventForm = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Instagram</span>
-                                  <span className="text-muted-foreground font-semibold block">{form.getValues("evento.insta_evento") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Instagram</span>
+                                  <span className="text-foreground font-semibold block">{form.getValues("evento.insta_evento") || '-'}</span>
                                 </div>
                                 
                                 <div className="space-y-1">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">WhatsApp</span>
-                                  <span className="text-muted-foreground font-semibold block">{form.getValues("evento.contato_info") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">WhatsApp</span>
+                                  <span className="text-foreground font-semibold block">{form.getValues("evento.contato_info") || '-'}</span>
                                 </div>
                                 
                                 <div className="space-y-1 md:col-span-2">
-                                  <span className="text-foreground text-[12px] uppercase font-bold tracking-tight block">Site</span>
-                                  <span className="text-muted-foreground font-semibold block break-all">{form.getValues("evento.site_evento") || '-'}</span>
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Site</span>
+                                  <span className="text-foreground font-semibold block break-all">{form.getValues("evento.site_evento") || '-'}</span>
+                                </div>
+
+                                <div className="space-y-1 md:col-span-2">
+                                  <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight block">Release do Evento</span>
+                                  <p className="text-foreground font-medium text-sm leading-relaxed whitespace-pre-wrap">{form.getValues("evento.release_evento") || '-'}</p>
                                 </div>
                               </div>
                             </div>
 
                             {/* 2. PRODUÇÃO & PARCEIROS */}
                             <div className="space-y-4">
-                              <h4 className="font-bold text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Produção & Parceiros</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Produção & Parceiros</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {[
                                   { key: 'producao', label: 'Produção' },
@@ -378,15 +393,15 @@ export const EventForm = () => {
                                   return (
                                     <div key={key} className="flex justify-between items-center text-sm bg-background/50 p-4 rounded-lg border border-border/30">
                                        <div className="flex items-center gap-2">
-                                         <span className="text-foreground text-[12px] uppercase tracking-tight font-bold">{label}:</span>
-                                         <span className="text-muted-foreground truncate max-w-[150px] font-semibold">{data?.ativa ? data.nome : "Não Adicionado"}</span>
+                                         <span className="text-muted-foreground text-[12px] uppercase tracking-tight font-medium">{label}:</span>
+                                         <span className="text-foreground truncate max-w-[150px] font-semibold">{data?.ativa ? data.nome : "Não Adicionado"}</span>
                                        </div>
                                        <div className="flex items-center gap-1.5">
                                          {data?.ativa && (
                                            data.logo ? (
-                                             <span className="text-[10px] text-green-500 font-bold flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> LOGO</span>
+                                             <span className="text-[10px] text-green-500 font-medium flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> LOGO</span>
                                            ) : (
-                                             <span className="text-[10px] text-muted-foreground font-bold flex items-center gap-1"><Circle className="h-3.5 w-3.5 text-muted-foreground/30" /> LOGO</span>
+                                             <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1"><Circle className="h-3.5 w-3.5 text-muted-foreground/30" /> LOGO</span>
                                            )
                                          )}
                                        </div>
@@ -398,7 +413,7 @@ export const EventForm = () => {
 
                             {/* 3. ATRAÇÕES */}
                             <div className="space-y-4">
-                              <h4 className="font-bold text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Atrações</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Atrações</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {([1, 2, 3, 4] as const).map(num => {
                                   const key = `atracao_0${num}` as keyof FormSchema['atracoes'];
@@ -409,7 +424,7 @@ export const EventForm = () => {
                                   if (!atracao?.ativa && !isPrincipal) {
                                     return (
                                       <div key={key} className="flex justify-between items-center text-sm bg-background/50 p-4 rounded-lg border border-border/30 opacity-60">
-                                        <span className="text-muted-foreground font-bold text-xs uppercase tracking-tight">{label}: Atração não Adicionada</span>
+                                        <span className="text-muted-foreground font-medium text-xs uppercase tracking-tight">{label}: Atração não Adicionada</span>
                                       </div>
                                     );
                                   }
@@ -417,10 +432,10 @@ export const EventForm = () => {
                                   return (
                                     <div key={key} className="flex justify-between items-center text-sm bg-background/50 p-4 rounded-lg border border-border/30">
                                       <div className="flex items-center gap-2">
-                                        <span className="text-foreground text-[12px] uppercase tracking-tight font-bold">{label}:</span>
-                                        <span className="text-muted-foreground truncate max-w-[180px] font-semibold">{atracao?.nome || '-'}</span>
+                                        <span className="text-muted-foreground text-[12px] uppercase tracking-tight font-medium">{label}:</span>
+                                        <span className="text-foreground truncate max-w-[180px] font-semibold">{atracao?.nome || '-'}</span>
                                       </div>
-                                      <div className="flex gap-4 text-[10px] font-bold uppercase">
+                                      <div className="flex gap-4 text-[10px] font-medium uppercase">
                                         <span className="flex items-center gap-1">
                                           {atracao?.foto01 ? (
                                             <><CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> <span className="text-green-500">Foto 01</span></>
@@ -451,7 +466,7 @@ export const EventForm = () => {
 
                             {/* 4. ÁREAS E BENEFÍCIOS */}
                             <div className="space-y-4">
-                              <h4 className="font-bold text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Áreas e Benefícios</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Áreas e Benefícios</h4>
                               <div className="grid grid-cols-1 gap-3">
                                 {!Object.entries(form.getValues("areas") || {}).some(([_, v]) => (v as any)?.ativa) ? (
                                   <div className="bg-background/50 p-4 rounded-lg border border-border/30 text-center italic text-muted-foreground text-sm">
@@ -465,8 +480,8 @@ export const EventForm = () => {
                                       const label = areaId.replace('info_', '').replace(/_/g, ' ').toUpperCase();
                                       return (
                                         <div key={areaId} className="flex flex-col gap-1.5 bg-background/50 p-4 rounded-lg border border-border/30">
-                                          <span className="text-foreground text-[12px] uppercase font-bold tracking-tight">{label}</span>
-                                          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                                          <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight">{label}</span>
+                                          <p className="text-sm text-foreground leading-relaxed font-medium">
                                             {area.descricao}
                                           </p>
                                         </div>
@@ -478,40 +493,40 @@ export const EventForm = () => {
 
                             {/* 5. IDENTIDADE VISUAL */}
                             <div className="space-y-4">
-                              <h4 className="font-bold text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Identidade Visual</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Identidade Visual</h4>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 <div className="bg-background/50 p-3 rounded-lg border border-border/30 flex flex-col gap-1.5">
-                                  <span className="text-[12px] text-foreground font-bold uppercase tracking-tight">Background</span>
+                                  <span className="text-[12px] text-muted-foreground font-medium uppercase tracking-tight">Background</span>
                                   {form.getValues("linha_visual.background") ? (
-                                    <span className="text-xs font-bold text-green-500 flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-green-500 flex items-center gap-1.5">
                                       <CheckCircle2 className="h-3.5 w-3.5" /> Enviado
                                     </span>
                                   ) : (
-                                    <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
                                       <Circle className="h-3.5 w-3.5 text-muted-foreground/30" /> Não informado
                                     </span>
                                   )}
                                 </div>
                                 <div className="bg-background/50 p-3 rounded-lg border border-border/30 flex flex-col gap-1.5">
-                                  <span className="text-[12px] text-foreground font-bold uppercase tracking-tight">Logo Evento 01</span>
+                                  <span className="text-[12px] text-muted-foreground font-medium uppercase tracking-tight">Logo Evento 01</span>
                                   {form.getValues("linha_visual.logo_01_evento") ? (
-                                    <span className="text-xs font-bold text-green-500 flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-green-500 flex items-center gap-1.5">
                                       <CheckCircle2 className="h-3.5 w-3.5" /> Enviado
                                     </span>
                                   ) : (
-                                    <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
                                       <Circle className="h-3.5 w-3.5 text-muted-foreground/30" /> Não informado
                                     </span>
                                   )}
                                 </div>
                                 <div className="bg-background/50 p-3 rounded-lg border border-border/30 flex flex-col gap-1.5">
-                                  <span className="text-[12px] text-foreground font-bold uppercase tracking-tight">Logo Evento 02</span>
+                                  <span className="text-[12px] text-muted-foreground font-medium uppercase tracking-tight">Logo Evento 02</span>
                                   {form.getValues("linha_visual.logo_02_evento") ? (
-                                    <span className="text-xs font-bold text-green-500 flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-green-500 flex items-center gap-1.5">
                                       <CheckCircle2 className="h-3.5 w-3.5" /> Enviado
                                     </span>
                                   ) : (
-                                    <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
                                       <Circle className="h-3.5 w-3.5 text-muted-foreground/30" /> Não informado
                                     </span>
                                   )}
@@ -530,18 +545,22 @@ export const EventForm = () => {
                         </p>
                      </div>
 
-                     <Button 
-                      onClick={handleFinalSubmit} 
-                      disabled={isLoading}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 text-lg border border-primary/20 shadow-md shadow-primary/10 hover:shadow-primary/20 active:scale-[0.99] transition-all duration-200"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : "CONFIRMAR E ENVIAR 🚀"}
-                    </Button>
+                     <div className="flex justify-end">
+                       <Button 
+                        onClick={handleFinalSubmit} 
+                        disabled={isLoading}
+                        variant="default"
+                        size="sm"
+                        className="gap-2 px-8"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : "Confirmar e Enviar"}
+                      </Button>
+                     </div>
                   </div>
                 </DialogContent>
                     </Dialog>

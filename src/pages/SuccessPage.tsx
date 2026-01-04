@@ -27,9 +27,11 @@ export const SuccessPage = () => {
         <div className="pt-6">
           <Button 
             onClick={() => navigate('/')} 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8"
+            variant="default"
+            size="sm"
+            className="gap-2 px-8"
           >
-            <Home className="mr-2 h-4 w-4" />
+            <Home className="h-4 w-4" />
             Voltar para o Início
           </Button>
         </div>

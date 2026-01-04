@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -9,9 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink, Copy, Check } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, Trash2, Edit2, Plus, Settings, ListFilter, LayoutDashboard, Info, Lightbulb } from "lucide-react";
+import { FormItemLayout } from "@/components/common/FormItemLayout";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,17 +20,70 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+type Tab = 'submissions' | 'tokens' | 'settings';
 
 export const AdminPage = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [currentTab, setCurrentTab] = useState<Tab>('submissions');
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
+  const [newToken, setNewToken] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [generatedLink, setGeneratedLink] = useState("");
+
+  const [tokens, setTokens] = useState<any[]>([]);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [generos, setGeneros] = useState<any[]>([]);
+  const [ticketeiras, setTicketeiras] = useState<any[]>([]);
+  const [editingItem, setEditingItem] = useState<{ id?: string, nome: string, type: 'genero' | 'ticketeira' } | null>(null);
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchSubmissions();
+    fetchTokens();
+    fetchRefs();
   }, []);
+
+  const fetchRefs = async () => {
+    const [genRes, tickRes] = await Promise.all([
+      supabase.from('generos_musicais').select('*').order('nome'),
+      supabase.from('ticketeiras').select('*').order('nome')
+    ]);
+    if (genRes.data) setGeneros(genRes.data);
+    if (tickRes.data) setTicketeiras(tickRes.data);
+  };
+
+  const fetchTokens = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('event_tokens')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTokens(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar tokens:', error);
+    }
+  };
 
   const fetchSubmissions = async () => {
     try {
@@ -50,10 +104,96 @@ export const AdminPage = () => {
     }
   };
 
+  const handleUpdateTokenStatus = async (token: string, used: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('event_tokens')
+        .update({ used })
+        .eq('token', token);
+
+      if (error) throw error;
+      
+      toast({
+        variant: "success",
+        title: "Status atualizado",
+        description: `O token agora está ${used ? 'Usado' : 'Disponível'}.`,
+      });
+      fetchSubmissions();
+      fetchTokens();
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar status",
+        description: "Não foi possível alterar o status do token.",
+      });
+    }
+  };
+
+  const handleGenerateToken = async () => {
+    if (!newToken) return;
+    try {
+      const { error } = await supabase
+        .from('event_tokens')
+        .insert([{ 
+          token: newToken, 
+          client_name: clientName,
+          used: false 
+        }]);
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/evento/${newToken}`;
+      setGeneratedLink(link);
+      toast({
+        variant: "success",
+        title: "Token gerado com sucesso!",
+        description: "O link já pode ser enviado ao cliente.",
+      });
+      fetchSubmissions();
+      fetchTokens();
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Erro ao gerar token",
+        description: "Certifique-se que o token é único.",
+      });
+    }
+  };
+
+  const crudAction = async (action: 'create' | 'update' | 'delete', type: 'genero' | 'ticketeira', payload?: any) => {
+    const table = type === 'genero' ? 'generos_musicais' : 'ticketeiras';
+    try {
+      let res;
+      if (action === 'create') res = await supabase.from(table).insert([{ nome: payload.nome }]);
+      else if (action === 'update') res = await supabase.from(table).update({ nome: payload.nome }).eq('id', payload.id);
+      else if (action === 'delete') res = await supabase.from(table).delete().eq('id', payload.id);
+
+      if (res?.error) throw res.error;
+
+      toast({ 
+        variant: "success",
+        title: "Sucesso", 
+        description: "Operação realizada com sucesso." 
+      });
+      fetchRefs();
+      setIsEditingModalOpen(false);
+      setEditingItem(null);
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Erro", description: "Falha na operação." });
+    }
+  };
+
   const handleSendToWebhook = async (submission: any) => {
     const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
     if (!webhookUrl) {
-      alert("URL do Webhook N8N não configurada!");
+      toast({
+        variant: "destructive",
+        title: "Erro de configuração",
+        description: "URL do Webhook N8N não configurada!",
+      });
       return;
     }
 
@@ -78,14 +218,18 @@ export const AdminPage = () => {
       });
 
       if (response.ok) {
-        alert("Enviado com sucesso para o N8N!");
+        toast({ 
+          variant: "success",
+          title: "Enviado", 
+          description: "Dados enviados com sucesso para o N8N!" 
+        });
       } else {
         const text = await response.text();
-        alert(`Erro ao enviar: ${text}`);
+        toast({ variant: "destructive", title: "Erro no envio", description: text });
       }
     } catch (e) {
       console.error(e);
-      alert("Erro de conexão ou CORS ao tentar enviar.");
+      toast({ variant: "destructive", title: "Erro de conexão", description: "Erro de conexão ou CORS ao tentar enviar." });
     }
   };
 
@@ -98,23 +242,94 @@ export const AdminPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Monitoramento de submissões do FormChronos.</p>
+    <div className="min-h-screen bg-background pb-20">
+      {/* Header Fixo */}
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="font-extrabold text-background text-sm">C</span>
+            </div>
+            <h1 className="font-medium tracking-tight">Chronos • Anotaê!</h1>
           </div>
-          <Button onClick={fetchSubmissions} variant="outline" size="sm">
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-8 mt-8 space-y-8">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-medium tracking-tight">Chronos Admin</h1>
+          <p className="text-muted-foreground">Gestão de submissões e configurações do sistema.</p>
         </div>
 
-        <Card className="border-border/50 shadow-lg">
-          <CardHeader>
-            <CardTitle>Submissões Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="flex items-center justify-between">
+          {/* Tabs Simples */}
+          <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg w-fit border border-border/50">
+            <Button
+              variant={currentTab === 'submissions' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setCurrentTab('submissions')}
+              className="gap-2"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Submissões
+            </Button>
+            <Button
+              variant={currentTab === 'tokens' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setCurrentTab('tokens')}
+              className="gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Formulários Criados
+            </Button>
+            <Button
+              variant={currentTab === 'settings' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setCurrentTab('settings')}
+              className="gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Configurações
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm"
+              onClick={() => {
+                setNewToken("");
+                setClientName("");
+                setGeneratedLink("");
+                setShowTokenDialog(true);
+              }} 
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Gerar Link de Formulário
+            </Button>
+            <Button onClick={fetchSubmissions} variant="outline" size="sm" className="gap-2">
+              Atualizar
+            </Button>
+          </div>
+        </div>
+
+        {currentTab === 'submissions' ? (
+          <Card className="border-border/50 shadow-lg overflow-hidden border-0 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="bg-muted/30 border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ListFilter className="h-5 w-5 text-primary" />
+                  Lista de Submissões
+                </CardTitle>
+                <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                  {submissions.length} Total
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
             {submissions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 Nenhuma submissão encontrada.
@@ -137,7 +352,7 @@ export const AdminPage = () => {
                     return (
                       <TableRow key={sub.id}>
                         <TableCell>
-                          <div className="font-bold">{eventData.evento?.nome_evento || "Sem nome"}</div>
+                          <div className="font-medium text-sm">{eventData.evento?.nome_evento || "Sem nome"}</div>
                           <div className="text-xs text-muted-foreground">
                              {eventData.evento?.cidade ? `${eventData.evento.cidade}/${eventData.evento.state || eventData.evento.estado}` : '-'}
                           </div>
@@ -152,11 +367,11 @@ export const AdminPage = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {sub.technical_release_url ? (
+                          {sub.master_context ? (
                             <Button 
                               variant="link" 
-                              className="text-primary p-0 h-auto font-bold flex items-center gap-1"
-                              onClick={() => window.open(sub.technical_release_url, '_blank')}
+                              className="text-primary p-0 h-auto font-medium flex items-center gap-1"
+                              onClick={() => window.open(sub.master_context, '_blank')}
                             >
                               <ExternalLink className="h-4 w-4" />
                               Master Context
@@ -166,11 +381,21 @@ export const AdminPage = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                           {sub.event_tokens?.used ? (
-                             <Badge variant="secondary" className="bg-red-500/10 text-red-500 border-red-500/20">Usado</Badge>
-                           ) : (
-                             <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Disponível</Badge>
-                           )}
+                           <Select 
+                             value={sub.event_tokens?.used ? "true" : "false"} 
+                             onValueChange={(val) => handleUpdateTokenStatus(sub.token, val === "true")}
+                           >
+                             <SelectTrigger className={cn(
+                               "w-[130px] h-8 text-xs",
+                               sub.event_tokens?.used ? "bg-destructive/10 text-destructive-foreground border-destructive-border/50" : "bg-success/10 text-success-foreground border-success-border/50"
+                             )}>
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="false">Disponível</SelectItem>
+                               <SelectItem value="true">Usado</SelectItem>
+                             </SelectContent>
+                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -184,7 +409,7 @@ export const AdminPage = () => {
                             </Button>
                             <Button 
                               size="sm" 
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                              className="gap-2"
                               onClick={() => handleSendToWebhook(sub)}
                               title="Reenviar para N8N"
                             >
@@ -195,13 +420,159 @@ export const AdminPage = () => {
                       </TableRow>
                     );
                   })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  ) : currentTab === 'tokens' ? (
+    <Card className="border-border/50 shadow-lg overflow-hidden border-0 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="bg-muted/30 border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ExternalLink className="h-5 w-5 text-primary" />
+            Tokens e Links Ativos
+          </CardTitle>
+          <Badge variant="outline" className="font-mono text-[10px] uppercase">
+            {tokens.length} Gerados
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {tokens.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            Nenhum formulário gerado ainda.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Evento / Cliente</TableHead>
+                <TableHead>Token</TableHead>
+                <TableHead>Data Criação</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Link</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tokens.map((token) => (
+                <TableRow key={token.id}>
+                  <TableCell className="font-medium">
+                    {token.client_name || "Sem nome"}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {token.token}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {new Date(token.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={token.used ? "destructive" : "success"}>
+                      {token.used ? "Usado" : "Disponível"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2 h-8"
+                      onClick={() => {
+                        const link = `${window.location.origin}/evento/${token.token}`;
+                        navigator.clipboard.writeText(link);
+                        setCopiedToken(token.token);
+                        setTimeout(() => setCopiedToken(null), 2000);
+                        toast({ 
+                          variant: "success",
+                          title: "Link Copiado!", 
+                          description: "O link foi copiado para a área de transferência." 
+                        });
+                      }}
+                    >
+                      {copiedToken === token.token ? (
+                        <>
+                          <Check className="h-3 w-3 text-success" />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          Copiar Link
+                        </>
+                      )}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Gêneros Musicais */}
+      <Card className="border-border/50 shadow-lg border-0 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/50 flex flex-row items-center justify-between py-4">
+          <CardTitle className="text-sm uppercase tracking-wider font-medium text-primary">Gêneros Musicais</CardTitle>
+          <Button size="sm" onClick={() => { setEditingItem({ nome: "", type: "genero" }); setIsEditingModalOpen(true); }} className="px-2">
+            <Plus className="h-4 w-4 mr-1" /> Novo
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableBody>
+              {generos.map(g => (
+                <TableRow key={g.id} className="hover:bg-muted/20">
+                  <TableCell className="font-medium">{g.nome}</TableCell>
+                  <TableCell className="text-right flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => { setEditingItem({ ...g, type: "genero" }); setIsEditingModalOpen(true); }}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => confirm("Excluir?") && crudAction('delete', 'genero', g)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        <Dialog open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+      {/* Ticketeiras */}
+      <Card className="border-border/50 shadow-lg border-0 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/50 flex flex-row items-center justify-between py-4">
+          <CardTitle className="text-sm uppercase tracking-wider font-medium text-primary">Ticketeiras Parceiras</CardTitle>
+          <Button size="sm" onClick={() => { setEditingItem({ nome: "", type: "ticketeira" }); setIsEditingModalOpen(true); }} className="px-2">
+            <Plus className="h-4 w-4 mr-1" /> Nova
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableBody>
+              {ticketeiras.map(t => (
+                <TableRow key={t.id} className="hover:bg-muted/20">
+                  <TableCell className="font-medium">{t.nome}</TableCell>
+                  <TableCell className="text-right flex justify-end gap-1">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => { setEditingItem({ ...t, type: "ticketeira" }); setIsEditingModalOpen(true); }}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 text-destructive/70 hover:text-destructive" onClick={() => confirm("Excluir?") && crudAction('delete', 'ticketeira', t)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )}
+
+  {/* Modais Antigos */}
+  <Dialog open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+    {/* ... manteve-se igual ... */}
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-background border-border flex flex-col">
             <DialogHeader className="flex flex-row items-center justify-between pr-8">
               <div className="space-y-1">
@@ -234,6 +605,104 @@ export const AdminPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Modal Gerador de Token */}
+        <Dialog open={showTokenDialog} onOpenChange={setShowTokenDialog}>
+          <DialogContent className="max-w-md bg-background border-border">
+            <DialogHeader>
+              <DialogTitle>Gerar Novo Link de Formulário</DialogTitle>
+              <DialogDescription>
+                Criar novo Token Exclusivo para o cliente preencher o formulário.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <FormItemLayout 
+                label="Nome do Evento"
+                className="py-2"
+              >
+                <Input 
+                  placeholder="Ex: Universo Paralello" 
+                  value={clientName} 
+                  onChange={(e) => setClientName(e.target.value)} 
+                />
+              </FormItemLayout>
+              
+              <FormItemLayout 
+                label="Token (Identificador Único)"
+                className="py-2"
+              >
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Ex: up-2026-vava" 
+                    value={newToken} 
+                    onChange={(e) => setNewToken(e.target.value)} 
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setNewToken(Math.random().toString(36).substring(2, 12).toUpperCase())}>
+                    Auto
+                  </Button>
+                </div>
+              </FormItemLayout>
+
+              {generatedLink && (
+                <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                  <Label className="text-primary text-[10px] uppercase font-medium tracking-widest px-0">Link Gerado</Label>
+                  <div className="flex gap-2">
+                    <Input readOnly value={generatedLink} className="bg-background" />
+                    <Button size="icon" onClick={() => {
+                      navigator.clipboard.writeText(generatedLink);
+                      setCopiedToken("dialog");
+                      setTimeout(() => setCopiedToken(null), 2000);
+                      toast({ 
+                        variant: "success",
+                        title: "Link Copiado!", 
+                        description: "O link foi copiado para a área de transferência." 
+                      });
+                    }}>
+                      {copiedToken === "dialog" ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              {!generatedLink ? (
+                <Button size="sm" className="w-full" onClick={handleGenerateToken} disabled={!newToken}>
+                  Salvar e Gerar Link
+                </Button>
+              ) : (
+                <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowTokenDialog(false)}>
+                  Fechar
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal CRUD Referências */}
+        <Dialog open={isEditingModalOpen} onOpenChange={setIsEditingModalOpen}>
+          <DialogContent className="max-w-xs bg-background border-border">
+            <DialogHeader>
+              <DialogTitle>{editingItem?.id ? 'Editar' : 'Novo'} {editingItem?.type === 'genero' ? 'Gênero' : 'Ticketeira'}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input 
+                value={editingItem?.nome || ""} 
+                onChange={(e) => setEditingItem(prev => prev ? { ...prev, nome: e.target.value } : null)}
+                placeholder="Nome..."
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button 
+                className="w-full" 
+                onClick={() => crudAction(editingItem?.id ? 'update' : 'create', editingItem!.type, editingItem)}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );

@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { Loader2 } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormSchema } from '@/lib/validations';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileUpload } from '@/components/FileUpload';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FileUpload } from '@/components/FileUpload';
 import { FormItemLayout } from '@/components/common/FormItemLayout';
-import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Step2Props {
   form: UseFormReturn<FormSchema>;
@@ -16,12 +24,35 @@ interface Step2Props {
 
 export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
   const { register, setValue, watch, formState: { errors } } = form;
+  const [generos, setGeneros] = useState<{ id: string; nome: string }[]>([]);
+  const [ticketeiras, setTicketeiras] = useState<{ id: string; nome: string }[]>([]);
+  const [isLoadingRefs, setIsLoadingRefs] = useState(true);
+
+  useEffect(() => {
+    const fetchRefs = async () => {
+      try {
+        const [genRes, tickRes] = await Promise.all([
+          supabase.from('generos_musicais').select('id, nome').order('nome'),
+          supabase.from('ticketeiras').select('id, nome').order('nome')
+        ]);
+
+        if (genRes.data) setGeneros(genRes.data);
+        if (tickRes.data) setTicketeiras(tickRes.data);
+      } catch (err) {
+        console.error("Erro ao carregar referências:", err);
+      } finally {
+        setIsLoadingRefs(false);
+      }
+    };
+
+    fetchRefs();
+  }, []);
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-primary">Dados do Evento</CardTitle>
+          <CardTitle className="text-lg font-medium text-primary">Dados do Evento</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <FormItemLayout
@@ -103,15 +134,33 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-primary">Presença Digital & Classificação</CardTitle>
+          <CardTitle className="text-lg font-medium text-primary">Presença Digital & Classificação</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormItemLayout label="Instagram do evento" error={errors.evento?.insta_evento?.message}>
-              <Input {...register("evento.insta_evento")} placeholder="@usuario" />
+            <FormItemLayout label="Instagram do Evento" error={errors.evento?.insta_evento?.message}>
+              <Input 
+                {...register("evento.insta_evento")} 
+                placeholder="@usuario" 
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && !val.startsWith('@')) {
+                    setValue("evento.insta_evento", `@${val}`, { shouldValidate: true });
+                  }
+                }}
+              />
             </FormItemLayout>
-            <FormItemLayout label="Site do evento" error={errors.evento?.site_evento?.message}>
-              <Input {...register("evento.site_evento")} placeholder="https://..." />
+            <FormItemLayout label="Site do Evento" error={errors.evento?.site_evento?.message}>
+              <Input 
+                {...register("evento.site_evento")} 
+                placeholder="https://..." 
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && !val.startsWith('http')) {
+                    setValue("evento.site_evento", `https://${val}`, { shouldValidate: true });
+                  }
+                }}
+              />
             </FormItemLayout>
           </div>
 
@@ -120,34 +169,55 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               label="Contato (Whatsapp)" 
               error={errors.evento?.contato_info?.message}
             >
-              <Input {...register("evento.contato_info")} placeholder="(00) 00000-0000" />
+              <Input 
+                {...register("evento.contato_info")} 
+                placeholder="(00) 00000-0000" 
+                onChange={(e) => {
+                  let val = e.target.value.replace(/\D/g, "");
+                  if (val.length > 11) val = val.slice(0, 11);
+                  
+                  // Aplicar máscara
+                  let formatted = val;
+                  if (val.length > 2) {
+                    formatted = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                  }
+                  if (val.length > 7) {
+                    formatted = `(${val.slice(0, 2)}) ${val.slice(2, 7)}-${val.slice(7)}`;
+                  }
+                  
+                  setValue("evento.contato_info", formatted, { shouldValidate: true });
+                }}
+              />
             </FormItemLayout>
             
             <FormItemLayout 
               label="Ticketeira" 
               error={errors.evento?.ticketeira?.message}
             >
-              <Select onValueChange={(v) => setValue("evento.ticketeira", v)} value={watch("evento.ticketeira")}>
+              <Select 
+                onValueChange={(v) => {
+                  setValue("evento.ticketeira", v);
+                  const selected = ticketeiras.find(t => t.nome === v);
+                  setValue("evento.ticketeira_id", selected?.id || null);
+                }} 
+                value={watch("evento.ticketeira")}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a ticketeira..." />
+                  <SelectValue placeholder={isLoadingRefs ? "Carregando..." : "Selecione a ticketeira..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="App Ticket">App Ticket</SelectItem>
-                  <SelectItem value="BaladApp">BaladApp</SelectItem>
-                  <SelectItem value="Bilheteria Digital">Bilheteria Digital</SelectItem>
-                  <SelectItem value="Event Brite">Event Brite</SelectItem>
-                  <SelectItem value="Eventim">Eventim</SelectItem>
-                  <SelectItem value="Ingresse">Ingresse</SelectItem>
-                  <SelectItem value="Ingresso Digital">Ingresso Digital</SelectItem>
-                  <SelectItem value="Pag Tickets">Pag Tickets</SelectItem>
-                  <SelectItem value="Sympla">Sympla</SelectItem>
-                  <SelectItem value="Shotgun">Shotgun</SelectItem>
-                  <SelectItem value="Ticket Master">Ticket Master</SelectItem>
-                  <SelectItem value="Tickets for Fun">Tickets for Fun</SelectItem>
-                  <SelectItem value="Ticket 360">Ticket 360</SelectItem>
-                  <SelectItem value="Zig Fun">Zig Fun</SelectItem>
-                  <SelectItem value="Outgo">Outgo</SelectItem>
-                  <SelectItem value="Outra">Outra</SelectItem>
+                  {isLoadingRefs ? (
+                    <div className="p-2 flex items-center justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      {ticketeiras.map((t) => (
+                        <SelectItem key={t.id} value={t.nome}>{t.nome}</SelectItem>
+                      ))}
+                      <SelectItem value="Outra">Outra</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </FormItemLayout>
@@ -176,50 +246,30 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               label="Gênero Musical"
               error={errors.evento?.genero_evento?.message}
             >
-              <Select onValueChange={(v) => setValue("evento.genero_evento", v)} value={watch("evento.genero_evento")}>
+              <Select 
+                onValueChange={(v) => {
+                  setValue("evento.genero_evento", v);
+                  const selected = generos.find(g => g.nome === v);
+                  setValue("evento.genero_musical_id", selected?.id || null);
+                }} 
+                value={watch("evento.genero_evento")}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o gênero..." />
+                  <SelectValue placeholder={isLoadingRefs ? "Carregando..." : "Selecione o gênero..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pop / Pop Nacional">Pop / Pop Nacional</SelectItem>
-                  <SelectItem value="Rock">Rock</SelectItem>
-                  <SelectItem value="Pop Rock">Pop Rock</SelectItem>
-                  <SelectItem value="Rock Nacional">Rock Nacional</SelectItem>
-                  <SelectItem value="Sertanejo">Sertanejo</SelectItem>
-                  <SelectItem value="Sertanejo Universitário">Sertanejo Universitário</SelectItem>
-                  <SelectItem value="Sertanejo Raiz / Romântico">Sertanejo Raiz / Romântico</SelectItem>
-                  <SelectItem value="Funk Carioca">Funk Carioca</SelectItem>
-                  <SelectItem value="Funk Ostentação">Funk Ostentação</SelectItem>
-                  <SelectItem value="Funk Melody">Funk Melody</SelectItem>
-                  <SelectItem value="Funk Proibidão">Funk Proibidão</SelectItem>
-                  <SelectItem value="Pagode / Samba">Pagode / Samba</SelectItem>
-                  <SelectItem value="Axé Music">Axé Music</SelectItem>
-                  <SelectItem value="Brega Funk">Brega Funk</SelectItem>
-                  <SelectItem value="Forró (tradicional e eletrônico)">Forró (tradicional e eletrônico)</SelectItem>
-                  <SelectItem value="Trap">Trap</SelectItem>
-                  <SelectItem value="Rap">Rap</SelectItem>
-                  <SelectItem value="Hip Hop">Hip Hop</SelectItem>
-                  <SelectItem value="Indie">Indie</SelectItem>
-                  <SelectItem value="Alternativo">Alternativo</SelectItem>
-                  <SelectItem value="Reggaeton">Reggaeton</SelectItem>
-                  <SelectItem value="Frevo / Maracatu">Frevo / Maracatu</SelectItem>
-                  <SelectItem value="Baião / Xote / Forró Pé de Serra">Baião / Xote / Forró Pé de Serra</SelectItem>
-                  <SelectItem value="Pagode Baiano / Samba Reggae">Pagode Baiano / Samba Reggae</SelectItem>
-                  <SelectItem value="MPB">MPB</SelectItem>
-                  <SelectItem value="Samba">Samba</SelectItem>
-                  <SelectItem value="Samba Rock">Samba Rock</SelectItem>
-                  <SelectItem value="Bossa Nova">Bossa Nova</SelectItem>
-                  <SelectItem value="R&B">R&B</SelectItem>
-                  <SelectItem value="Jazz">Jazz</SelectItem>
-                  <SelectItem value="House">House</SelectItem>
-                  <SelectItem value="Techno">Techno</SelectItem>
-                  <SelectItem value="Tech House">Tech House</SelectItem>
-                  <SelectItem value="Deep House">Deep House</SelectItem>
-                  <SelectItem value="Progressive House">Progressive House</SelectItem>
-                  <SelectItem value="Techno / Minimal">Techno / Minimal</SelectItem>
-                  <SelectItem value="Trance / Psytrance">Trance / Psytrance</SelectItem>
-                  <SelectItem value="Bass music / Dubstep / Trap eletrônico">Bass music / Dubstep / Trap eletrônico</SelectItem>
-                  <SelectItem value="Outro">Outro</SelectItem>
+                  {isLoadingRefs ? (
+                    <div className="p-2 flex items-center justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      {generos.map((g) => (
+                        <SelectItem key={g.id} value={g.nome}>{g.nome}</SelectItem>
+                      ))}
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </FormItemLayout>
@@ -250,7 +300,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 Release do Evento
               </label>
               <span className={cn(
-                "text-[9px] font-bold uppercase tracking-wider",
+                "text-[9px] font-medium uppercase tracking-wider",
                 (watch("evento.release_evento")?.length || 0) > 2000 ? "text-red-500" : "text-primary bg-primary/10 px-1.5 py-0.5 rounded"
               )}>
                 {watch("evento.release_evento")?.length || 0} / 2000
@@ -269,7 +319,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-primary">Produção & Apoio</CardTitle>
+          <CardTitle className="text-lg font-medium text-primary">Produção & Apoio</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

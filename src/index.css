@@ -1,35 +1,109 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root, .classic-dark {
+  --background: 0 0% 11%;
+  --foreground: 0 0% 93%;
+  --card: 0 0% 14%;
+  --card-foreground: 0 0% 93%;
+  --popover: 0 0% 16%;
+  --popover-foreground: 0 0% 93%;
+  --primary: 153 60% 53%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 16%;
+  --secondary-foreground: 0 0% 93%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 65%;
+  --accent: 0 0% 18%;
+  --accent-foreground: 0 0% 93%;
+  --destructive: 11 77% 54%;
+  --destructive-foreground: 0 0% 98%;
+  --destructive-border: 8 72% 29%;
+  --warning: 39 100% 57%;
+  --warning-foreground: 0 0% 12%;
+  --warning-border: 35 91% 22%;
+  --success: 153 61% 53%;
+  --success-foreground: 0 0% 98%;
+  --success-border: 154 62% 22%;
+  --border: 0 0% 25%;
+  --input: 0 0% 35%;
+  --ring: 153 60% 53%;
+  --brand-500: 153 60% 53%;
+  --brand-600: 154 62% 22%;
+}
+
+.light {
+  --background: 0 0% 99%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 99%;
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 95%;
+  --popover-foreground: 0 0% 9%;
+  --primary: 153 60% 53%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 0 0% 93%;
+  --accent-foreground: 0 0% 9%;
+  --destructive: 10 78% 54%;
+  --destructive-foreground: 0 0% 9%;
+  --border: 0 0% 78%;
+  --input: 0 0% 99%;
+}
+
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 12%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 13%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 153 60% 53%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 13%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 13%;
+  --muted-foreground: 0 0% 30%;
+  --accent: 0 0% 16%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 10 78% 54%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 30%;
+  --input: 0 0% 35%;
+}
 
 @theme {
-  /* Supabase Classic Dark Colors (Neutral - Removed Blueish Tint) */
-  --color-background: hsl(0 0% 7%);
-  --color-foreground: hsl(0 0% 98%);
+  /* Supabase Semantic Colors Mapper */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
 
-  --color-card: hsl(0 0% 12%);
-  --color-card-foreground: hsl(0 0% 98%);
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
 
-  --color-popover: hsl(0 0% 12%);
-  --color-popover-foreground: hsl(0 0% 98%);
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
 
-  --color-primary: hsl(153 60% 53%);
-  --color-primary-foreground: hsl(0 0% 7%);
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
 
-  --color-secondary: hsl(0 0% 15%);
-  --color-secondary-foreground: hsl(0 0% 98%);
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
 
-  --color-muted: hsl(0 0% 15%);
-  --color-muted-foreground: hsl(0 0% 63.9%);
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
 
-  --color-accent: hsl(0 0% 15%);
-  --color-accent-foreground: hsl(0 0% 98%);
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
 
-  --color-destructive: hsl(0 72% 51%);
-  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
 
-  --color-border: hsl(0 0% 20%);
-  --color-input: hsl(0 0% 20%);
-  --color-ring: hsl(153 60% 53%);
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
 
   /* Custom Status Colors */
   --color-brand: hsl(158 64% 52%);
@@ -39,8 +113,9 @@
   --radius-md: calc(0.5rem - 2px);
   --radius-sm: calc(0.5rem - 4px);
 
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-sans: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-heading: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 @layer base {
@@ -63,5 +138,15 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Autofill Styles Override */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }

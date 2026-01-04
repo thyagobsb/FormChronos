@@ -59,11 +59,11 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3 items-start">
         <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
         <div className="space-y-1">
-          <p className="text-sm font-semibold">Configuração de Benefícios</p>
+          <p className="text-sm font-medium">Configuração de Benefícios</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Selecione os setores e diferenciais do seu evento. Para cada item marcado, 
             descreva detalhadamente os benefícios e o que está incluso.
@@ -109,7 +109,7 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
                     </div>
                     <div className="space-y-0.5">
                       <span className={cn(
-                        "text-sm font-bold tracking-tight transition-colors",
+                        "text-sm font-medium tracking-tight transition-colors",
                         isActive ? "text-foreground" : "text-muted-foreground group-hover/row:text-foreground"
                       )}>
                         {item.label}
