@@ -2,11 +2,11 @@ import { z } from "zod";
 
 
 export const linhaVisualSchema = z.object({
-  background: z.string().url().optional().or(z.literal("")),
-  logo_01_evento: z.string().url("Logo obrigatória"),
-  logo_02_evento: z.string().url().optional().or(z.literal("")),
-  decor_01: z.string().url().optional().or(z.literal("")),
-  decor_02: z.string().url().optional().or(z.literal("")),
+  background: z.string().optional().or(z.literal("")),
+  logo_01_evento: z.string().min(1, "Logo obrigatória"),
+  logo_02_evento: z.string().optional().or(z.literal("")),
+  decor_01: z.string().optional().or(z.literal("")),
+  decor_02: z.string().optional().or(z.literal("")),
 });
 
 export const eventoSchema = z.object({
@@ -59,38 +59,41 @@ export const eventoSchema = z.object({
 export const atracaosSchema = z.object({
   atracao_01: z.object({
     nome: z.string().min(2, "O nome deve ter no mínimo 2 caracteres"),
-    logo: z.string().url("Logo obrigatória").optional().or(z.literal("")),
-    foto01: z.string().url("Foto 01 obrigatória"),
-    foto02: z.string().url("Foto 02 obrigatória").optional().or(z.literal("")),
+    logo: z.string().optional().or(z.literal("")),
+    foto01: z.string().min(1, "Foto Principal obrigatória"),
+    foto02: z.string().optional().or(z.literal("")),
     release: z.string().min(20, "O release deve ter no mínimo 20 caracteres"),
   }),
   atracao_02: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().default(false),
     nome: z.string().optional(),
-    logo: z.string().url().optional().or(z.literal("")),
-    foto01: z.string().url("Foto 01 obrigatória").optional().or(z.literal("")),
-    foto02: z.string().url().optional().or(z.literal("")),
+    logo: z.string().optional().or(z.literal("")),
+    foto01: z.string().optional().or(z.literal("")),
+    foto02: z.string().optional().or(z.literal("")),
     release: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] })
-    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] }),
+    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] })
+    .optional(),
   atracao_03: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().default(false),
     nome: z.string().optional(),
-    logo: z.string().url().optional().or(z.literal("")),
-    foto01: z.string().url("Foto 01 obrigatória").optional().or(z.literal("")),
-    foto02: z.string().url().optional().or(z.literal("")),
+    logo: z.string().optional().or(z.literal("")),
+    foto01: z.string().optional().or(z.literal("")),
+    foto02: z.string().optional().or(z.literal("")),
     release: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] })
-    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] }),
+    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] })
+    .optional(),
   atracao_04: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().default(false),
     nome: z.string().optional(),
-    logo: z.string().url().optional().or(z.literal("")),
-    foto01: z.string().url("Foto 01 obrigatória").optional().or(z.literal("")),
-    foto02: z.string().url().optional().or(z.literal("")),
+    logo: z.string().optional().or(z.literal("")),
+    foto01: z.string().optional().or(z.literal("")),
+    foto02: z.string().optional().or(z.literal("")),
     release: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] })
-    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] }),
+    .refine(data => !data.ativa || (data.foto01 && data.foto01.length > 0), { message: "Foto Principal obrigatória", path: ["foto01"] })
+    .optional(),
 });
 
 const areaItemSchema = z.object({
@@ -133,18 +136,9 @@ export const complementoSchema = z.object({
 
 export const formSchema = z.object({
   evento: eventoSchema,
-  atracoes: atracaosSchema.partial(),
+  atracoes: atracaosSchema,
   complemento: complementoSchema.partial().optional(),
   linha_visual: linhaVisualSchema,
-}).refine(data => {
-  // Garantir que atracao_01 (obrigatória) esteja preenchida
-  if (!data.atracoes?.atracao_01?.nome || !data.atracoes?.atracao_01?.foto01 || !data.atracoes?.atracao_01?.release) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Preencha os dados da Atração Principal",
-  path: ["atracoes", "atracao_01"]
 }).refine(data => {
   if (data.complemento?.info_openbar?.ativa && data.evento?.classificacao !== "18+") {
     return false;

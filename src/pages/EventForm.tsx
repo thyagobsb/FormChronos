@@ -65,7 +65,19 @@ export const EventForm = () => {
         apoio_01: { ativa: false, nome: "", logo: "" },
         apoio_02: { ativa: false, nome: "", logo: "" }
       },
-      linha_visual: {},
+      linha_visual: {
+        background: "",
+        logo_01_evento: "",
+        logo_02_evento: "",
+        decor_01: "",
+        decor_02: ""
+      },
+      atracoes: {
+        atracao_01: { nome: "", logo: "", foto01: "", foto02: "", release: "" },
+        atracao_02: { ativa: false, nome: "", logo: "", foto01: "", foto02: "", release: "" },
+        atracao_03: { ativa: false, nome: "", logo: "", foto01: "", foto02: "", release: "" },
+        atracao_04: { ativa: false, nome: "", logo: "", foto01: "", foto02: "", release: "" }
+      },
       complemento: {}
     }
   });
@@ -605,7 +617,18 @@ export const EventForm = () => {
                       type="button" 
                       variant="default"
                       size="sm"
-                      onClick={() => setShowConfirmDialog(true)}
+                      onClick={async () => {
+                        const isValid = await form.trigger(["linha_visual"]);
+                        if (isValid) {
+                          setShowConfirmDialog(true);
+                        } else {
+                          toast({
+                            variant: "destructive",
+                            title: "Campos obrigatórios",
+                            description: "Por favor, preencha todos os campos obrigatórios da linha visual.",
+                          });
+                        }
+                      }}
                       disabled={isLoading}
                       className="gap-2 px-8"
                     >
