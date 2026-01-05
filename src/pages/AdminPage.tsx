@@ -55,6 +55,7 @@ export const AdminPage = () => {
   const [editingItem, setEditingItem] = useState<{ id?: string, nome: string, type: 'genero' | 'ticketeira' } | null>(null);
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sendingN8NId, setSendingN8NId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -225,19 +226,15 @@ export const AdminPage = () => {
       return;
     }
 
-    if (!confirm("Tem certeza que deseja enviar estes dados para o N8N?")) return;
-
     try {
+      setSendingN8NId(submission.id);
+      
       const body = {
-        ...submission.data,
+        ...(typeof submission.data === 'string' ? JSON.parse(submission.data) : submission.data),
         token: submission.event_tokens?.token,
         submitted_at: submission.submitted_at,
         manual_trigger: true
       };
-
-      if (typeof submission.data === 'string') {
-        Object.assign(body, JSON.parse(submission.data));
-      }
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -257,7 +254,9 @@ export const AdminPage = () => {
       }
     } catch (e) {
       console.error(e);
-      toast({ variant: "destructive", title: "Erro de conexão", description: "Erro de conexão ou CORS ao tentar enviar." });
+      toast({ variant: "destructive", title: "Erro de conexão", description: "Erro de conexão ou CORS ao tentar enviar. Verifique o console." });
+    } finally {
+      setSendingN8NId(null);
     }
   };
 
@@ -454,11 +453,19 @@ export const AdminPage = () => {
                             </Button>
                             <Button 
                               size="sm" 
-                              className="gap-2"
+                              className="gap-2 min-w-[100px]"
                               onClick={() => handleSendToWebhook(sub)}
+                              disabled={sendingN8NId === sub.id}
                               title="Reenviar para N8N"
                             >
-                              Enviar N8N
+                              {sendingN8NId === sub.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Enviando...
+                                </>
+                              ) : (
+                                "Enviar N8N"
+                              )}
                             </Button>
                           </div>
                         </TableCell>

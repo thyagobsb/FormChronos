@@ -398,7 +398,23 @@ export const EventForm = () => {
         .update({ used: true })
         .eq('token', token);
 
-      // 4. Limpar persistência
+      // 4. Disparo para o N8N (Automático)
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (webhookUrl) {
+        console.log('Enviando dados para N8N (automático)...');
+        fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...finalData,
+            token,
+            submitted_at: new Date().toISOString(),
+            auto_trigger: true
+          }),
+        }).catch(err => console.error('Erro no disparo automático N8N:', err));
+      }
+
+      // 5. Limpar persistência
       localStorage.removeItem(`form_chronos_${token}`);
       localStorage.removeItem(`form-step-${token}`);
 
