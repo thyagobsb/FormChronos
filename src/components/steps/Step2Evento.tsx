@@ -279,7 +279,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               error={errors.evento?.classificacao?.message}
             >
               <Select onValueChange={(v) => setValue("evento.classificacao", v)} value={watch("evento.classificacao")}>
-                <SelectTrigger disabled={watch("areas.info_openbar.ativa")}>
+                <SelectTrigger disabled={watch("complemento.info_openbar.ativa" as any)}>
                   <SelectValue placeholder="Selecione a idade..." />
                 </SelectTrigger>
                 <SelectContent>
