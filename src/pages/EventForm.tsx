@@ -376,16 +376,18 @@ export const EventForm = () => {
             }
           };
     
-          // 1. Salvar no Supabase (Histórico)
+          // 1. Salvar no Supabase (Histórico com Upsert para evitar duplicidade)
           const { error: dbError } = await supabase
             .from('event_submissions')
-            .insert([{
+            .upsert({
               token,
               data: finalData,
               submitted_at: new Date().toISOString(),
               genero_musical_id: data.evento.genero_musical_id,
               ticketeira_id: data.evento.ticketeira_id
-            }]);
+            }, { 
+              onConflict: 'token' 
+            });
     
           if (dbError) throw dbError;
       console.log('Supabase Insert realizado com sucesso'); // LOG
