@@ -461,10 +461,10 @@ export const AdminPage = () => {
                               {sendingN8NId === sub.id ? (
                                 <>
                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                  Enviando...
+                                  Reenviando...
                                 </>
                               ) : (
-                                "Enviar N8N"
+                                "Reenviar N8N"
                               )}
                             </Button>
                           </div>
