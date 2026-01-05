@@ -133,9 +133,18 @@ export const complementoSchema = z.object({
 
 export const formSchema = z.object({
   evento: eventoSchema,
-  atracoes: atracaosSchema,
+  atracoes: atracaosSchema.partial(),
   complemento: complementoSchema.partial().optional(),
   linha_visual: linhaVisualSchema,
+}).refine(data => {
+  // Garantir que atracao_01 (obrigatória) esteja preenchida
+  if (!data.atracoes?.atracao_01?.nome || !data.atracoes?.atracao_01?.foto01 || !data.atracoes?.atracao_01?.release) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Preencha os dados da Atração Principal",
+  path: ["atracoes", "atracao_01"]
 }).refine(data => {
   if (data.complemento?.info_openbar?.ativa && data.evento?.classificacao !== "18+") {
     return false;

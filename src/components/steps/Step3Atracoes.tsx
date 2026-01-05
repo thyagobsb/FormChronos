@@ -48,14 +48,14 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
                     (num === 4 && !watch("atracoes.atracao_03.ativa"))
                   }
                   onCheckedChange={(val) => {
-                    setValue(`atracoes.${key}.ativa` as any, val);
+                    setValue(`atracoes.${key}.ativa` as any, val, { shouldDirty: true, shouldValidate: true });
                     // Deativação em cascata
                     if (num === 2 && !val) {
-                      setValue("atracoes.atracao_03.ativa", false);
-                      setValue("atracoes.atracao_04.ativa", false);
+                      setValue("atracoes.atracao_03.ativa", false, { shouldValidate: true });
+                      setValue("atracoes.atracao_04.ativa", false, { shouldValidate: true });
                     }
                     if (num === 3 && !val) {
-                      setValue("atracoes.atracao_04.ativa", false);
+                      setValue("atracoes.atracao_04.ativa", false, { shouldValidate: true });
                     }
                   }}
                 />
