@@ -135,83 +135,143 @@ export const EventForm = () => {
     window.scrollTo(0, 0);
   };
 
-  const onSubmit = async (data: FormSchema) => {
-    try {
-      setIsLoading(true);
-
-      // Mapeamento de nomes amigáveis para o complemento
-      const COMPLEMENTO_LABELS: Record<string, string> = {
-        info_pista: 'Pista',
-        info_pista_premium: 'Pista Premium/Front Stage',
-        info_areavip: 'Área VIP',
-        info_camarote: 'Camarote',
-        info_camarote_openbar: 'Camarote Open Bar',
-        info_lounge: 'Lounge',
-        info_arquibancada: 'Arquibancada',
-        info_openbar: 'Evento Open Bar',
-        info_openfood: 'Open Food',
-        info_mesas: 'Mesas',
-        info_bistros: 'Bistrôs',
-        info_mesas_num: 'Mesas Numeradas',
-        info_camarote_corp: 'Camarote Corporativo',
-        info_hospitality: 'Hospitality',
-        info_convidados: 'Convidados',
-        info_meetgreet: 'Meet & Greet',
-        info_diferenciais: 'Diferenciais',
-        info_pontos_fisicos: 'Pontos Físicos',
-        info_estacionamento: 'Estacionamento',
-        info_limitacoes: 'Limitações Específicas',
-        info_acessibilidade: 'Acessibilidade',
-        info_area_pcd: 'Espaço Área PCD',
-        info_meia_entrada: 'Meia Entrada',
-        info_meia_social: 'Meia Entrada Social',
-      };
-
-      // Limpeza e Ordenação do JSON
-      const cleanComplemento: Record<string, any> = {};
-      if (data.complemento) {
-        Object.entries(data.complemento).forEach(([key, value]: [string, any]) => {
-          if (value?.ativa) {
-            cleanComplemento[key] = {
-              nome: COMPLEMENTO_LABELS[key] || key,
-              descricao: value.descricao
-            };
+      const onSubmit = async (data: FormSchema) => {
+        try {
+          setIsLoading(true);
+    
+          // 1. Limpeza de Apoios/Patrocínio no objeto evento
+          const cleanEvento: Record<string, any> = {};
+          
+          // Ordem solicitada para o Evento
+          const eventoOrder = [
+            'nome_evento', 'data_evento', 'local', 'localizacao_endereco', 
+            'cidade', 'estado', 'hora_inicio_evento', 'hora_termino_evento', 
+            'abertura_portoes', 'insta_evento', 'site_evento', 'contato_info',
+            'ticketeira', 'genero_evento', 'classificacao', 'release_evento'
+          ];
+    
+          eventoOrder.forEach(key => {
+            if (key === 'genero_evento' && data.evento[key as keyof typeof data.evento] === 'Outro') {
+              cleanEvento['genero'] = data.evento.genero_evento_outro;
+            } else if (key === 'ticketeira' && data.evento[key as keyof typeof data.evento] === 'Outra') {
+              cleanEvento['ticketeira'] = data.evento.nome_ticketeira_outra;
+            } else {
+              // Mapeamento amigável de chaves
+              const friendlyKeys: Record<string, string> = {
+                'nome_evento': 'Nome do Evento',
+                'data_evento': 'Data do Evento',
+                'local': 'Local',
+                'localizacao_endereco': 'Endereço',
+                'cidade': 'Cidade',
+                'estado': 'Estado',
+                'hora_inicio_evento': 'Hora de Início',
+                'hora_termino_evento': 'Hora Término',
+                'abertura_portoes': 'Abertura',
+                'insta_evento': 'Instagram',
+                'site_evento': 'Site',
+                'contato_info': 'Contato',
+                'ticketeira': 'Ticketeira',
+                'genero_evento': 'Gênero',
+                'classificacao': 'Classificação',
+                'release_evento': 'Release'
+              };
+              cleanEvento[friendlyKeys[key] || key] = data.evento[key as keyof typeof data.evento];
+            }
+          });
+    
+          // Adicionar Produção/Patrocínio/Apoios logo após o release do evento
+          const parceiros = [
+            { key: 'producao', label: 'Produção' },
+            { key: 'patrocinador', label: 'Patrocínio' },
+            { key: 'apoio_01', label: 'Apoio 01' },
+            { key: 'apoio_02', label: 'Apoio 02' }
+          ];
+    
+          parceiros.forEach(p => {
+            const val = data.evento[p.key as keyof typeof data.evento] as any;
+            if (val?.ativa) {
+              cleanEvento[p.label] = {
+                nome: val.nome,
+                logo: val.logo
+              };
+            }
+          });
+    
+          // 2. Atrações com ordem de links corrigida
+          const cleanAtracoes: Record<string, any> = {};
+          Object.entries(data.atracoes).forEach(([key, value]: [string, any]) => {
+            if (key === 'atracao_01' || value?.ativa) {
+              // Ordem: Nome, Release, Links (Logo, Fotos)
+              cleanAtracoes[key] = {
+                nome: value.nome,
+                release: value.release,
+                logo: value.logo,
+                foto_01: value.foto01,
+                foto_02: value.foto02
+              };
+            }
+          });
+    
+          // 3. Complemento (limpo)
+          const COMPLEMENTO_LABELS: Record<string, string> = {
+            info_pista: 'Pista',
+            info_pista_premium: 'Pista Premium/Front Stage',
+            info_areavip: 'Área VIP',
+            info_camarote: 'Camarote',
+            info_camarote_openbar: 'Camarote Open Bar',
+            info_lounge: 'Lounge',
+            info_arquibancada: 'Arquibancada',
+            info_openbar: 'Evento Open Bar',
+            info_openfood: 'Open Food',
+            info_mesas: 'Mesas',
+            info_bistros: 'Bistrôs',
+            info_mesas_num: 'Mesas Numeradas',
+            info_camarote_corp: 'Camarote Corporativo',
+            info_hospitality: 'Hospitality',
+            info_convidados: 'Convidados',
+            info_meetgreet: 'Meet & Greet',
+            info_diferenciais: 'Diferenciais',
+            info_pontos_fisicos: 'Pontos Físicos',
+            info_estacionamento: 'Estacionamento',
+            info_limitacoes: 'Limitações Específicas',
+            info_acessibilidade: 'Acessibilidade',
+            info_area_pcd: 'Espaço Área PCD',
+            info_meia_entrada: 'Meia Entrada',
+            info_meia_social: 'Meia Entrada Social',
+          };
+    
+          const cleanComplemento: Record<string, any> = {};
+          if (data.complemento) {
+            Object.entries(data.complemento).forEach(([key, value]: [string, any]) => {
+              if (value?.ativa) {
+                cleanComplemento[COMPLEMENTO_LABELS[key] || key] = value.descricao;
+              }
+            });
           }
-        });
-      }
-
-      const cleanAtracoes: Record<string, any> = {};
-      Object.entries(data.atracoes).forEach(([key, value]: [string, any]) => {
-        if (key === 'atracao_01' || value?.ativa) {
-          const { ativa, ...rest } = value;
-          cleanAtracoes[key] = rest;
-        }
-      });
-
-      // Objeto final na ordem desejada
-      const finalData = {
-        evento: data.evento,
-        atracoes: cleanAtracoes,
-        complemento: cleanComplemento,
-        linha_visual: data.linha_visual
-      };
-
-      // 1. Salvar no Supabase (Histórico)
-      console.log('Salvando no Supabase...', finalData); // LOG
-      const { error: dbError } = await supabase
-        .from('event_submissions')
-        .insert([{
-          token,
-          data: finalData,
-          submitted_at: new Date().toISOString(),
-          genero_musical_id: data.evento.genero_musical_id,
-          ticketeira_id: data.evento.ticketeira_id
-        }]);
-
-      if (dbError) {
-        console.error('Erro Supabase Insert:', dbError); // LOG
-        throw dbError;
-      }
+    
+          const finalData = {
+            evento: cleanEvento,
+            atracoes: cleanAtracoes,
+            complemento: cleanComplemento,
+            linha_visual: {
+              background: data.linha_visual.background,
+              logo_01: data.linha_visual.logo_01_evento,
+              logo_02: data.linha_visual.logo_02_evento
+            }
+          };
+    
+          // 1. Salvar no Supabase (Histórico)
+          const { error: dbError } = await supabase
+            .from('event_submissions')
+            .insert([{
+              token,
+              data: finalData,
+              submitted_at: new Date().toISOString(),
+              genero_musical_id: data.evento.genero_musical_id,
+              ticketeira_id: data.evento.ticketeira_id
+            }]);
+    
+          if (dbError) throw dbError;
       console.log('Supabase Insert realizado com sucesso'); // LOG
 
       // 3. Marcar token como usado

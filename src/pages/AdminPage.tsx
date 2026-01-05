@@ -54,6 +54,7 @@ export const AdminPage = () => {
   const [ticketeiras, setTicketeiras] = useState<any[]>([]);
   const [editingItem, setEditingItem] = useState<{ id?: string, nome: string, type: 'genero' | 'ticketeira' } | null>(null);
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -89,6 +90,7 @@ export const AdminPage = () => {
   };
 
   const fetchSubmissions = async () => {
+    setIsRefreshing(true);
     try {
       const { data, error } = await supabase
         .from('event_submissions')
@@ -100,8 +102,12 @@ export const AdminPage = () => {
 
       if (error) throw error;
       setSubmissions(data || []);
+      
+      // Feedback visual se for gatilho manual
+      setTimeout(() => setIsRefreshing(false), 2000);
     } catch (error) {
       console.error('Erro ao buscar submissões:', error);
+      setIsRefreshing(false);
     } finally {
       setLoading(false);
     }
@@ -331,8 +337,24 @@ export const AdminPage = () => {
               <Plus className="h-4 w-4" />
               Gerar Link de Formulário
             </Button>
-            <Button onClick={fetchSubmissions} variant="outline" size="sm" className="gap-2">
-              Atualizar
+            <Button 
+              onClick={fetchSubmissions} 
+              variant="outline" 
+              size="sm" 
+              disabled={isRefreshing}
+              className="gap-2 min-w-[100px]"
+            >
+              {isRefreshing ? (
+                <>
+                  <Check className="h-4 w-4 text-success" />
+                  Atualizado
+                </>
+              ) : (
+                <>
+                  <Loader2 className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                  Atualizar
+                </>
+              )}
             </Button>
           </div>
         </div>
