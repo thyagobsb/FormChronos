@@ -401,21 +401,9 @@ export const AdminPage = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                           <Select 
-                             value={sub.event_tokens?.used ? "true" : "false"} 
-                             onValueChange={(val) => handleUpdateTokenStatus(sub.token, val === "true")}
-                           >
-                             <SelectTrigger className={cn(
-                               "w-[130px] h-8 text-xs",
-                               sub.event_tokens?.used ? "bg-destructive/10 text-destructive-foreground border-destructive-border/50" : "bg-success/10 text-success-foreground border-success-border/50"
-                             )}>
-                               <SelectValue />
-                             </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="false">Disponível</SelectItem>
-                               <SelectItem value="true">Usado</SelectItem>
-                             </SelectContent>
-                           </Select>
+                           <Badge variant={sub.event_tokens?.used ? "destructive" : "success"} className="text-[10px] uppercase">
+                             {sub.event_tokens?.used ? "Usado" : "Disponível"}
+                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -487,9 +475,21 @@ export const AdminPage = () => {
                     {new Date(token.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={token.used ? "destructive" : "success"}>
-                      {token.used ? "Usado" : "Disponível"}
-                    </Badge>
+                    <Select 
+                      value={token.used ? "true" : "false"} 
+                      onValueChange={(val) => handleUpdateTokenStatus(token.token, val === "true")}
+                    >
+                      <SelectTrigger className={cn(
+                        "w-[120px] h-8 text-xs",
+                        token.used ? "bg-destructive/10 text-destructive-foreground border-destructive-border/50" : "bg-success/10 text-success-foreground border-success-border/50"
+                      )}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="false">Disponível</SelectItem>
+                        <SelectItem value="true">Usado</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button 
