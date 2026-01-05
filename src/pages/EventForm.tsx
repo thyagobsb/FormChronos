@@ -79,6 +79,21 @@ export const EventForm = () => {
         setIsValidating(false);
         return;
       }
+
+      // Buscar se já existe uma submissão para este token para pré-preencher
+      const { data: submissionData } = await supabase
+        .from('event_submissions')
+        .select('data')
+        .eq('token', token)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (submissionData?.data) {
+        console.log('Dados de submissão anterior encontrados, restaurando...', submissionData.data);
+        form.reset(submissionData.data);
+      }
+
       setIsValidating(false);
     };
 
@@ -145,7 +160,7 @@ export const EventForm = () => {
         .eq('token', token);
 
       // 4. Limpar persistência
-      localStorage.removeItem(`form-persistence-${token}`);
+      localStorage.removeItem(`form_chronos_${token}`);
       localStorage.removeItem(`form-step-${token}`);
 
       toast({
