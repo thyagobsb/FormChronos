@@ -32,22 +32,22 @@ export const eventoSchema = z.object({
   classificacao: z.string().min(1, "Selecione a classificação"),
   release_evento: z.string().min(20, "O release deve ter no mínimo 20 caracteres").max(2000, "Release muito longo"),
   producao: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().optional().default(false),
     nome: z.string().optional(),
     logo: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] }),
   patrocinador: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().optional().default(false),
     nome: z.string().optional(),
     logo: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] }),
   apoio_01: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().optional().default(false),
     nome: z.string().optional(),
     logo: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] }),
   apoio_02: z.object({
-    ativa: z.boolean(),
+    ativa: z.boolean().optional().default(false),
     nome: z.string().optional(),
     logo: z.string().optional(),
   }).refine(data => !data.ativa || (data.nome && data.nome.length >= 2), { message: "Nome deve ter no mínimo 2 caracteres", path: ["nome"] }),

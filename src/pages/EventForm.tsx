@@ -44,8 +44,26 @@ export const EventForm = () => {
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
       evento: {
+        nome_evento: "",
+        local: "",
+        localizacao_endereco: "",
         cidade: "",
         estado: "",
+        data_evento: "",
+        hora_inicio_evento: "",
+        hora_termino_evento: "",
+        abertura_portoes: "",
+        insta_evento: "",
+        site_evento: "",
+        contato_info: "",
+        ticketeira: "",
+        genero_evento: "",
+        classificacao: "",
+        release_evento: "",
+        producao: { ativa: false, nome: "", logo: "" },
+        patrocinador: { ativa: false, nome: "", logo: "" },
+        apoio_01: { ativa: false, nome: "", logo: "" },
+        apoio_02: { ativa: false, nome: "", logo: "" }
       },
       linha_visual: {},
       complemento: {}

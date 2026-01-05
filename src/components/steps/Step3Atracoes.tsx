@@ -74,6 +74,10 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
               <Input 
                 {...register(`atracoes.${key}.nome` as any)} 
                 placeholder={`Nome da ${title.toLowerCase()}`} 
+                onChange={(e) => {
+                  register(`atracoes.${key}.nome`).onChange(e);
+                  form.trigger(`atracoes.${key}.nome` as any);
+                }}
               />
             </FormItemLayout>
 
@@ -85,7 +89,7 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
               >
                 <FileUpload 
                   defaultValue={watch(`atracoes.${key}.logo` as any)}
-                  onUploadComplete={(url) => setValue(`atracoes.${key}.logo` as any, url)}
+                  onUploadComplete={(url) => setValue(`atracoes.${key}.logo` as any, url, { shouldValidate: true })}
                   dimensions="1200x480px"
                 />
               </FormItemLayout>
@@ -96,7 +100,7 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
               >
                 <FileUpload 
                   defaultValue={watch(`atracoes.${key}.foto01` as any)}
-                  onUploadComplete={(url) => setValue(`atracoes.${key}.foto01` as any, url)}
+                  onUploadComplete={(url) => setValue(`atracoes.${key}.foto01` as any, url, { shouldValidate: true })}
                   dimensions="1440x2560px"
                 />
               </FormItemLayout>
@@ -107,7 +111,7 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
               >
                 <FileUpload 
                   defaultValue={watch(`atracoes.${key}.foto02` as any)}
-                  onUploadComplete={(url) => setValue(`atracoes.${key}.foto02` as any, url)}
+                  onUploadComplete={(url) => setValue(`atracoes.${key}.foto02` as any, url, { shouldValidate: true })}
                   dimensions="1440x2560px"
                 />
               </FormItemLayout>
@@ -131,6 +135,10 @@ export const Step3Atracoes: React.FC<Step3Props> = ({ form }) => {
                   {...register(`atracoes.${key}.release` as any)} 
                   placeholder={`Descreva a trajetória da ${title.toLowerCase()}...`} 
                   className="resize-none h-32"
+                  onChange={(e) => {
+                    register(`atracoes.${key}.release`).onChange(e);
+                    form.trigger(`atracoes.${key}.release` as any);
+                  }}
                 />
               </FormItemLayout>
             </div>

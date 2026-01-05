@@ -59,7 +59,14 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
             label="Nome do Evento"
             error={errors.evento?.nome_evento?.message}
           >
-            <Input {...register("evento.nome_evento")} placeholder="Ex: Festival de Verão 2026" />
+            <Input 
+              {...register("evento.nome_evento")} 
+              placeholder="Ex: Festival de Verão 2026" 
+              onChange={(e) => {
+                register("evento.nome_evento").onChange(e);
+                form.trigger("evento.nome_evento");
+              }}
+            />
           </FormItemLayout>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
@@ -67,14 +74,28 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               label="Local"
               error={errors.evento?.local?.message}
             >
-              <Input {...register("evento.local")} placeholder="Ex: Allianz Parque" />
+              <Input 
+                {...register("evento.local")} 
+                placeholder="Ex: Allianz Parque" 
+                onChange={(e) => {
+                  register("evento.local").onChange(e);
+                  form.trigger("evento.local");
+                }}
+              />
             </FormItemLayout>
 
             <FormItemLayout
               label="End. do Local"
               error={errors.evento?.localizacao_endereco?.message}
             >
-              <Input {...register("evento.localizacao_endereco")} placeholder="Rua, número, bairro" />
+              <Input 
+                {...register("evento.localizacao_endereco")} 
+                placeholder="Rua, número, bairro" 
+                onChange={(e) => {
+                  register("evento.localizacao_endereco").onChange(e);
+                  form.trigger("evento.localizacao_endereco");
+                }}
+              />
             </FormItemLayout>
           </div>
 
@@ -83,14 +104,21 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               label="Cidade"
               error={errors.evento?.cidade?.message}
             >
-              <Input {...register("evento.cidade")} placeholder="Cidade" />
+              <Input 
+                {...register("evento.cidade")} 
+                placeholder="Cidade" 
+                onChange={(e) => {
+                  register("evento.cidade").onChange(e);
+                  form.trigger("evento.cidade");
+                }}
+              />
             </FormItemLayout>
 
             <FormItemLayout
               label="Estado"
               error={errors.evento?.estado?.message}
             >
-              <Select onValueChange={(val) => setValue("evento.estado", val)} value={watch("evento.estado")}>
+              <Select onValueChange={(val) => setValue("evento.estado", val, { shouldValidate: true })} value={watch("evento.estado")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione UF" />
                 </SelectTrigger>
@@ -111,7 +139,14 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                   label="Data"
                   error={errors.evento?.data_evento?.message}
                 >
-                  <Input type="date" {...register("evento.data_evento")} />
+                  <Input 
+                    type="date" 
+                    {...register("evento.data_evento")} 
+                    onChange={(e) => {
+                      register("evento.data_evento").onChange(e);
+                      form.trigger("evento.data_evento");
+                    }}
+                  />
                 </FormItemLayout>
                 
                 <FormItemLayout label="Hora Início" error={errors.evento?.hora_inicio_evento?.message}>
@@ -142,6 +177,10 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               <Input 
                 {...register("evento.insta_evento")} 
                 placeholder="@usuario" 
+                onChange={(e) => {
+                  register("evento.insta_evento").onChange(e);
+                  form.trigger("evento.insta_evento");
+                }}
                 onBlur={(e) => {
                   const val = e.target.value.trim();
                   if (val && !val.startsWith('@')) {
@@ -154,6 +193,10 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               <Input 
                 {...register("evento.site_evento")} 
                 placeholder="https://..." 
+                onChange={(e) => {
+                  register("evento.site_evento").onChange(e);
+                  form.trigger("evento.site_evento");
+                }}
                 onBlur={(e) => {
                   const val = e.target.value.trim();
                   if (val && !val.startsWith('http')) {
@@ -186,6 +229,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                   }
                   
                   setValue("evento.contato_info", formatted, { shouldValidate: true });
+                  form.trigger("evento.contato_info");
                 }}
               />
             </FormItemLayout>
@@ -196,7 +240,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
             >
               <Select 
                 onValueChange={(v) => {
-                  setValue("evento.ticketeira", v);
+                  setValue("evento.ticketeira", v, { shouldValidate: true });
                   const selected = ticketeiras.find(t => t.nome === v);
                   setValue("evento.ticketeira_id", selected?.id || null);
                 }} 
@@ -229,13 +273,20 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 label="Nome da Ticketeira"
                 error={errors.evento?.nome_ticketeira_outra?.message}
               >
-                <Input {...register("evento.nome_ticketeira_outra")} placeholder="Nome da plataforma" />
+                  <Input 
+                    {...register("evento.nome_ticketeira_outra")} 
+                    placeholder="Nome da plataforma" 
+                    onChange={(e) => {
+                      register("evento.nome_ticketeira_outra").onChange(e);
+                      form.trigger("evento.nome_ticketeira_outra");
+                    }}
+                  />
               </FormItemLayout>
               <FormItemLayout label="Logo da Ticketeira">
                 <FileUpload
                   dimensions="1954x638px"
                   defaultValue={watch("evento.logo_ticketeira_outra")}
-                  onUploadComplete={(url) => setValue("evento.logo_ticketeira_outra", url)}
+                  onUploadComplete={(url) => setValue("evento.logo_ticketeira_outra", url, { shouldValidate: true })}
                 />
               </FormItemLayout>
             </>
@@ -248,7 +299,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
             >
               <Select 
                 onValueChange={(v) => {
-                  setValue("evento.genero_evento", v);
+                  setValue("evento.genero_evento", v, { shouldValidate: true });
                   const selected = generos.find(g => g.nome === v);
                   setValue("evento.genero_musical_id", selected?.id || null);
                 }} 
@@ -278,7 +329,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               label="Classificação"
               error={errors.evento?.classificacao?.message}
             >
-              <Select onValueChange={(v) => setValue("evento.classificacao", v)} value={watch("evento.classificacao")}>
+              <Select onValueChange={(v) => setValue("evento.classificacao", v, { shouldValidate: true })} value={watch("evento.classificacao")}>
                 <SelectTrigger disabled={watch("complemento.info_openbar.ativa" as any)}>
                   <SelectValue placeholder="Selecione a idade..." />
                 </SelectTrigger>
@@ -307,11 +358,15 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               </span>
             </div>
             <FormItemLayout error={errors.evento?.release_evento?.message}>
-              <Textarea 
-                {...register("evento.release_evento")} 
-                placeholder="Descreva o evento em detalhes..." 
-                className="resize-none h-32"
-              />
+                <Textarea 
+                  {...register("evento.release_evento")} 
+                  placeholder="Descreva o evento em detalhes..." 
+                  className="resize-none h-32"
+                  onChange={(e) => {
+                    register("evento.release_evento").onChange(e);
+                    form.trigger("evento.release_evento");
+                  }}
+                />
             </FormItemLayout>
           </div>
         </CardContent>
@@ -329,7 +384,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <h4 className="font-medium text-sm">Produção</h4>
                 <Switch 
                   checked={watch("evento.producao.ativa")} 
-                  onCheckedChange={(val) => setValue("evento.producao.ativa", val)} 
+                  onCheckedChange={(val) => setValue("evento.producao.ativa", val, { shouldValidate: true })} 
                 />
               </div>
               {watch("evento.producao.ativa") && (
@@ -338,13 +393,20 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                     label="Produção" 
                     error={errors.evento?.producao?.nome?.message}
                   >
-                    <Input {...register("evento.producao.nome")} placeholder="Nome da produtora" />
+                    <Input 
+                      {...register("evento.producao.nome")} 
+                      placeholder="Nome da produtora" 
+                      onChange={(e) => {
+                        register("evento.producao.nome").onChange(e);
+                        form.trigger("evento.producao");
+                      }}
+                    />
                   </FormItemLayout>
                   <FormItemLayout label="Logo Produção">
                     <FileUpload
                       dimensions="1954x638px"
                       defaultValue={watch("evento.producao.logo")}
-                      onUploadComplete={(url) => setValue("evento.producao.logo", url)}
+                      onUploadComplete={(url) => setValue("evento.producao.logo", url, { shouldValidate: true })}
                     />
                   </FormItemLayout>
                 </div>
@@ -358,7 +420,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <Switch 
                   checked={watch("evento.patrocinador.ativa")} 
                   onCheckedChange={(val) => {
-                    setValue("evento.patrocinador.ativa", val);
+                    setValue("evento.patrocinador.ativa", val, { shouldValidate: true });
                   }} 
                 />
               </div>
@@ -368,13 +430,20 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                     label="Patrocinador" 
                     error={errors.evento?.patrocinador?.nome?.message}
                   >
-                    <Input {...register("evento.patrocinador.nome")} placeholder="Nome do patrocinador" />
+                    <Input 
+                      {...register("evento.patrocinador.nome")} 
+                      placeholder="Nome do patrocinador" 
+                      onChange={(e) => {
+                        register("evento.patrocinador.nome").onChange(e);
+                        form.trigger("evento.patrocinador");
+                      }}
+                    />
                   </FormItemLayout>
                   <FormItemLayout label="Logo Patrocinador">
                     <FileUpload
                       dimensions="1954x638px"
                       defaultValue={watch("evento.patrocinador.logo")}
-                      onUploadComplete={(url) => setValue("evento.patrocinador.logo", url)}
+                      onUploadComplete={(url) => setValue("evento.patrocinador.logo", url, { shouldValidate: true })}
                     />
                   </FormItemLayout>
                 </div>
@@ -390,9 +459,9 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <Switch 
                   checked={watch("evento.apoio_01.ativa")} 
                   onCheckedChange={(val) => {
-                    setValue("evento.apoio_01.ativa", val);
+                    setValue("evento.apoio_01.ativa", val, { shouldValidate: true });
                     if (!val) {
-                      setValue("evento.apoio_02.ativa", false);
+                      setValue("evento.apoio_02.ativa", false, { shouldValidate: true });
                     }
                   }} 
                 />
@@ -403,13 +472,20 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                     label="Apoio 01" 
                     error={errors.evento?.apoio_01?.nome?.message}
                   >
-                    <Input {...register("evento.apoio_01.nome")} placeholder="Nome do apoio" />
+                    <Input 
+                      {...register("evento.apoio_01.nome")} 
+                      placeholder="Nome do apoio" 
+                      onChange={(e) => {
+                        register("evento.apoio_01.nome").onChange(e);
+                        form.trigger("evento.apoio_01");
+                      }}
+                    />
                   </FormItemLayout>
                   <FormItemLayout label="Logo Apoio 01">
                     <FileUpload
                       dimensions="1954x638px"
                       defaultValue={watch("evento.apoio_01.logo")}
-                      onUploadComplete={(url) => setValue("evento.apoio_01.logo", url)}
+                      onUploadComplete={(url) => setValue("evento.apoio_01.logo", url, { shouldValidate: true })}
                     />
                   </FormItemLayout>
                 </div>
@@ -423,7 +499,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <Switch 
                   checked={watch("evento.apoio_02.ativa")} 
                   disabled={!watch("evento.apoio_01.ativa")}
-                  onCheckedChange={(val) => setValue("evento.apoio_02.ativa", val)} 
+                  onCheckedChange={(val) => setValue("evento.apoio_02.ativa", val, { shouldValidate: true })} 
                 />
               </div>
               {watch("evento.apoio_02.ativa") && (
@@ -432,13 +508,20 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                     label="Apoio 02" 
                     error={errors.evento?.apoio_02?.nome?.message}
                   >
-                    <Input {...register("evento.apoio_02.nome")} placeholder="Nome do apoio" />
+                    <Input 
+                      {...register("evento.apoio_02.nome")} 
+                      placeholder="Nome do apoio" 
+                      onChange={(e) => {
+                        register("evento.apoio_02.nome").onChange(e);
+                        form.trigger("evento.apoio_02");
+                      }}
+                    />
                   </FormItemLayout>
                   <FormItemLayout label="Logo Apoio 02">
                     <FileUpload
                       dimensions="1954x638px"
                       defaultValue={watch("evento.apoio_02.logo")}
-                      onUploadComplete={(url) => setValue("evento.apoio_02.logo", url)}
+                      onUploadComplete={(url) => setValue("evento.apoio_02.logo", url, { shouldValidate: true })}
                     />
                   </FormItemLayout>
                 </div>
