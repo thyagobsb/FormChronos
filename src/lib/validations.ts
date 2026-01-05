@@ -94,9 +94,12 @@ export const atracaosSchema = z.object({
 });
 
 const areaItemSchema = z.object({
-  ativa: z.boolean().default(false),
-  descricao: z.string().optional(),
-}).refine(data => !data.ativa || (data.descricao && data.descricao.length > 0), {
+  ativa: z.boolean().optional().default(false),
+  descricao: z.string().nullish(),
+}).refine(data => {
+  if (!data.ativa) return true;
+  return !!(data.descricao && data.descricao.trim().length > 0);
+}, {
   message: "Descreva os benefícios/detalhes",
   path: ["descricao"]
 });
@@ -131,7 +134,7 @@ export const complementoSchema = z.object({
 export const formSchema = z.object({
   evento: eventoSchema,
   atracoes: atracaosSchema,
-  complemento: complementoSchema.optional(),
+  complemento: complementoSchema.partial().optional(),
   linha_visual: linhaVisualSchema,
 }).refine(data => {
   if (data.complemento?.info_openbar?.ativa && data.evento?.classificacao !== "18+") {

@@ -51,10 +51,13 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
 
   const toggleArea = (id: string, currentStatus: boolean) => {
     const newVal = !currentStatus;
-    setValue(`complemento.${id}.ativa` as any, newVal, { shouldDirty: true });
+    setValue(`complemento.${id}.ativa` as any, newVal, { 
+      shouldDirty: true,
+      shouldValidate: true 
+    });
     
     if (id === 'info_openbar' && newVal) {
-      setValue("evento.classificacao", "18+", { shouldDirty: true });
+      setValue("evento.classificacao", "18+", { shouldDirty: true, shouldValidate: true });
     }
   };
 
@@ -135,10 +138,15 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
                       <Textarea 
                         {...register(`complemento.${item.id}.descricao` as any)} 
                         placeholder={`Descreva o que está incluso no(a) ${item.label.toLowerCase()}...`} 
-                        aria-labelledby={`label-${item.id}`}                        className={cn(
+                        aria-labelledby={`label-${item.id}`}
+                        className={cn(
                           "resize-none h-24 text-xs transition-all focus:h-32",
                           hasError ? "border-destructive/50 bg-destructive/5" : "bg-background/80"
                         )}
+                        onChange={(e) => {
+                          register(`complemento.${item.id}.descricao`).onChange(e);
+                          form.trigger(`complemento.${item.id}` as any);
+                        }}
                       />
                     </FormItemLayout>
                   </div>
