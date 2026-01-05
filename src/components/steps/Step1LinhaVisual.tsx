@@ -2,7 +2,7 @@ import React from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormSchema } from '@/lib/validations';
 import { FileUpload } from '@/components/FileUpload';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormItemLayout } from '@/components/common/FormItemLayout';
 
 interface Step1Props {

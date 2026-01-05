@@ -126,7 +126,7 @@ export const areasSchema = z.object({
   info_area_pcd: areaItemSchema,
   info_meia_entrada: areaItemSchema,
   info_meia_social: areaItemSchema,
-}).partial();
+});
 
 export const formSchema = z.object({
   evento: eventoSchema,

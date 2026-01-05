@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  label: string;
+  label?: string;
   required?: boolean;
   defaultValue?: string;
   dimensions?: string;
@@ -18,7 +18,7 @@ interface FileUploadProps {
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
-  label,
+  label = '',
   defaultValue = '',
   dimensions,
   accept = 'image/png, image/jpeg, image/svg+xml',
@@ -81,7 +81,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div className="space-y-2" data-name={name}>
-      <Label className={cn(error && "text-destructive")}>{label}</Label>
+      {label && <Label className={cn(error && "text-destructive")}>{label}</Label>}
       <div 
         className={cn(
           "relative group border-2 border-dashed rounded-lg transition-all duration-200",

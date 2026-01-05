@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lightbulb, Sun, Moon, Sparkles } from 'lucide-react';
 import { 
   Select, 
@@ -30,14 +30,6 @@ export const ThemeToggle = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const getThemeIcon = (t: Theme) => {
-    switch (t) {
-      case 'light': return <Sun className="h-4 w-4" />;
-      case 'dark': return <Moon className="h-4 w-4" />;
-      case 'classic-dark': return <Sparkles className="h-4 w-4" />;
-      default: return <Lightbulb className="h-4 w-4" />;
-    }
-  };
 
   return (
     <div className="flex items-center gap-2">

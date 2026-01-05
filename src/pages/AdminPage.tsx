@@ -9,9 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink, Copy, Check, Trash2, Edit2, Plus, Settings, ListFilter, LayoutDashboard, Info, Lightbulb, LogOut } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check, Trash2, Edit2, Plus, Settings, ListFilter, LayoutDashboard, LogOut } from "lucide-react";
 import { FormItemLayout } from "@/components/common/FormItemLayout";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";

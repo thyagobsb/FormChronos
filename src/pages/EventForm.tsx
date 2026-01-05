@@ -9,14 +9,14 @@ import { useFormPersistence } from '@/hooks/useFormPersistence';
 import { Stepper } from '@/components/Stepper';
 import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Step1LinhaVisual } from '@/components/steps/Step1LinhaVisual';
 import { Step2Evento } from '@/components/steps/Step2Evento';
 import { Step3Atracoes } from '@/components/steps/Step3Atracoes';
 import { Step4Areas } from '@/components/steps/Step4Areas';
-import { Loader2, AlertCircle, AlertTriangle, CheckCircle2, Circle, Lightbulb } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, CheckCircle2, Circle } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Passos (Componentes serão importados depois)
@@ -41,7 +41,7 @@ export const EventForm = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const form = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       evento: {
         cidade: "",
@@ -168,7 +168,7 @@ export const EventForm = () => {
   };
 
   const handleFinalSubmit = () => {
-    form.handleSubmit(onSubmit)();
+    form.handleSubmit(onSubmit as any)();
   };
 
   if (isValidating) {
@@ -235,7 +235,7 @@ export const EventForm = () => {
             </p>
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
             {/* Passo Atual */}
             {currentStep === 0 && <Step2Evento form={form} />}
             {currentStep === 1 && <Step3Atracoes form={form} />}
@@ -421,7 +421,9 @@ export const EventForm = () => {
                                   const isPrincipal = num === 1;
                                   const label = isPrincipal ? "01 (Principal)" : `0${num}`;
                                   
-                                  if (!atracao?.ativa && !isPrincipal) {
+                                  const isActiveAtraction = isPrincipal || (atracao as any)?.ativa;
+                                  
+                                  if (!isActiveAtraction) {
                                     return (
                                       <div key={key} className="flex justify-between items-center text-sm bg-background/50 p-4 rounded-lg border border-border/30 opacity-60">
                                         <span className="text-muted-foreground font-medium text-xs uppercase tracking-tight">{label}: Atração não Adicionada</span>

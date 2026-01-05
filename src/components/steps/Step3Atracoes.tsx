@@ -4,7 +4,7 @@ import type { FormSchema } from '@/lib/validations';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUpload } from '@/components/FileUpload';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormItemLayout } from '@/components/common/FormItemLayout';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';

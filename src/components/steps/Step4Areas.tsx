@@ -44,10 +44,10 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
   const { register, setValue, control, formState: { errors } } = form;
 
   // Usar useWatch global para a lista, mas as atualizações individuais serão tratadas com cuidado
-  const areasValues = useWatch({
+  const areasValues = (useWatch({
     control,
     name: "areas"
-  }) || {};
+  }) || {}) as any;
 
   const toggleArea = (id: string, currentStatus: boolean) => {
     const newVal = !currentStatus;
