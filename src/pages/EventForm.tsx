@@ -93,9 +93,125 @@ export const EventForm = () => {
         .limit(1)
         .maybeSingle();
 
+      // Função para transformar dados limpos (do BD) de volta para o formato do Schema (com switches 'ativa')
+      const hydrateForm = (cleanData: any) => {
+        const hydrated: any = {
+          evento: { ...cleanData.evento },
+          atracoes: { ...cleanData.atracoes },
+          complemento: {},
+          linha_visual: {
+            background: cleanData.linha_visual?.background || "",
+            logo_01_evento: cleanData.linha_visual?.logo_01 || "",
+            logo_02_evento: cleanData.linha_visual?.logo_02 || ""
+          }
+        };
+
+        // 1. Restaurar Produção/Patrocínio/Apoio no objeto evento
+        const parceirosMap = [
+          { key: 'producao', label: 'Produção' },
+          { key: 'patrocinador', label: 'Patrocínio' },
+          { key: 'apoio_01', label: 'Apoio 01' },
+          { key: 'apoio_02', label: 'Apoio 02' }
+        ];
+
+        parceirosMap.forEach(p => {
+          if (cleanData.evento?.[p.label]) {
+            hydrated.evento[p.key] = {
+              ativa: true,
+              nome: cleanData.evento[p.label].nome,
+              logo: cleanData.evento[p.label].logo
+            };
+            // Remover a chave amigável para não sujar o schema interno
+            delete hydrated.evento[p.label];
+          }
+        });
+
+        // Mapeamento inverso amigável do Evento (se necessário)
+        const friendlyKeysInverse: Record<string, string> = {
+          'Nome do Evento': 'nome_evento',
+          'Data do Evento': 'data_evento',
+          'Local': 'local',
+          'Endereço': 'localizacao_endereco',
+          'Cidade': 'cidade',
+          'Estado': 'estado',
+          'Hora de Início': 'hora_inicio_evento',
+          'Hora Término': 'hora_termino_evento',
+          'Abertura': 'abertura_portoes',
+          'Instagram': 'insta_evento',
+          'Site': 'site_evento',
+          'Contato': 'contato_info',
+          'Ticketeira': 'ticketeira',
+          'Gênero': 'genero_evento',
+          'Classificação': 'classificacao',
+          'Release': 'release_evento'
+        };
+
+        Object.entries(friendlyKeysInverse).forEach(([label, key]) => {
+          if (cleanData.evento?.[label] !== undefined) {
+            hydrated.evento[key] = cleanData.evento[label];
+            delete hydrated.evento[label];
+          }
+        });
+
+        // 2. Restaurar Atrações (adicionar ativa: true)
+        if (cleanData.atracoes) {
+          Object.keys(cleanData.atracoes).forEach(key => {
+            if (hydrated.atracoes[key]) {
+              hydrated.atracoes[key].ativa = true;
+              // Restaurar nomes das fotos se houver (o schema usa foto01, o BD usa foto_01)
+              if (cleanData.atracoes[key].foto_01) hydrated.atracoes[key].foto01 = cleanData.atracoes[key].foto_01;
+              if (cleanData.atracoes[key].foto_02) hydrated.atracoes[key].foto02 = cleanData.atracoes[key].foto_02;
+            }
+          });
+        }
+
+        // 3. Restaurar Complementos (mapeamento inverso de labels)
+        const COMPLEMENTO_LABELS_INV: Record<string, string> = {
+          'Pista': 'info_pista',
+          'Pista Premium/Front Stage': 'info_pista_premium',
+          'Área VIP': 'info_areavip',
+          'Camarote': 'info_camarote',
+          'Camarote Open Bar': 'info_camarote_openbar',
+          'Lounge': 'info_lounge',
+          'Arquibancada': 'info_arquibancada',
+          'Evento Open Bar': 'info_openbar',
+          'Open Food': 'info_openfood',
+          'Mesas': 'info_mesas',
+          'Bistrôs': 'info_bistros',
+          'Mesas Numeradas': 'info_mesas_num',
+          'Camarote Corporativo': 'info_camarote_corp',
+          'Hospitality': 'info_hospitality',
+          'Convidados': 'info_convidados',
+          'Meet & Greet': 'info_meetgreet',
+          'Diferenciais': 'info_diferenciais',
+          'Pontos Físicos': 'info_pontos_fisicos',
+          'Estacionamento': 'info_estacionamento',
+          'Limitações Específicas': 'info_limitacoes',
+          'Acessibilidade': 'info_acessibilidade',
+          'Espaço Área PCD': 'info_area_pcd',
+          'Meia Entrada': 'info_meia_entrada',
+          'Meia Entrada Social': 'info_meia_social',
+        };
+
+        if (cleanData.complemento) {
+          Object.entries(cleanData.complemento).forEach(([label, value]) => {
+            const schemaKey = COMPLEMENTO_LABELS_INV[label];
+            if (schemaKey) {
+              hydrated.complemento[schemaKey] = {
+                ativa: true,
+                descricao: value
+              };
+            }
+          });
+        }
+
+        return hydrated;
+      };
+
       if (submissionData?.data) {
         console.log('Dados de submissão anterior encontrados, restaurando...', submissionData.data);
-        form.reset(submissionData.data);
+        const hydrated = hydrateForm(submissionData.data);
+        form.reset(hydrated);
       }
 
       setIsValidating(false);

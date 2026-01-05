@@ -89,8 +89,8 @@ export const AdminPage = () => {
     }
   };
 
-  const fetchSubmissions = async () => {
-    setIsRefreshing(true);
+  const fetchSubmissions = async (withFeedback = true) => {
+    if (withFeedback) setIsRefreshing(true);
     try {
       const { data, error } = await supabase
         .from('event_submissions')
@@ -104,13 +104,23 @@ export const AdminPage = () => {
       setSubmissions(data || []);
       
       // Feedback visual se for gatilho manual
-      setTimeout(() => setIsRefreshing(false), 2000);
+      if (withFeedback) setTimeout(() => setIsRefreshing(false), 2000);
     } catch (error) {
       console.error('Erro ao buscar submissões:', error);
-      setIsRefreshing(false);
+      if (withFeedback) setIsRefreshing(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      fetchSubmissions(false),
+      fetchTokens(),
+      fetchRefs()
+    ]);
+    setTimeout(() => setIsRefreshing(false), 2000);
   };
 
   const handleUpdateTokenStatus = async (token: string, used: boolean) => {
@@ -338,7 +348,7 @@ export const AdminPage = () => {
               Gerar Link de Formulário
             </Button>
             <Button 
-              onClick={fetchSubmissions} 
+              onClick={handleRefreshAll} 
               variant="outline" 
               size="sm" 
               disabled={isRefreshing}
