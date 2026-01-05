@@ -69,12 +69,20 @@ export const EventForm = () => {
       complemento: {}
     }
   });
+  const { errors } = form.formState;
 
   const { status: saveStatus } = useFormPersistence(form, token || 'default');
 
   useEffect(() => {
     document.title = "FormChronos";
   }, []);
+
+  // Debug de erros de validação
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      console.log('Validação do Passo 1 Falhou:', errors);
+    }
+  }, [errors]);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -112,119 +120,148 @@ export const EventForm = () => {
         .maybeSingle();
 
       // Função para transformar dados limpos (do BD) de volta para o formato do Schema (com switches 'ativa')
-      const hydrateForm = (cleanData: any) => {
-        const hydrated: any = {
-          evento: { ...cleanData.evento },
-          atracoes: { ...cleanData.atracoes },
-          complemento: {},
-          linha_visual: {
-            background: cleanData.linha_visual?.background || "",
-            logo_01_evento: cleanData.linha_visual?.logo_01 || "",
-            logo_02_evento: cleanData.linha_visual?.logo_02 || ""
-          }
-        };
+        const hydrateForm = (cleanData: any) => {
+          // Se o cleanData já tiver as chaves técnicas (formato novo), usamos elas diretamente
+          // Se não, tentamos mapear do formato "friendly" (legado/compacto)
+          const sourceEvento = cleanData.evento || {};
+          
+          const hydrated: any = {
+            evento: {
+              ...sourceEvento, // Puxar tudo que já for técnico
+              producao: sourceEvento.producao || { ativa: false, nome: "", logo: "" },
+              patrocinador: sourceEvento.patrocinador || { ativa: false, nome: "", logo: "" },
+              apoio_01: sourceEvento.apoio_01 || { ativa: false, nome: "", logo: "" },
+              apoio_02: sourceEvento.apoio_02 || { ativa: false, nome: "", logo: "" },
+            },
+            atracoes: { ...cleanData.atracoes },
+            complemento: {},
+            linha_visual: {
+              background: cleanData.linha_visual?.background || "",
+              logo_01_evento: cleanData.linha_visual?.logo_01_evento || cleanData.linha_visual?.logo_01 || "",
+              logo_02_evento: cleanData.linha_visual?.logo_02_evento || cleanData.linha_visual?.logo_02 || ""
+            }
+          };
 
-        // 1. Restaurar Produção/Patrocínio/Apoio no objeto evento
-        const parceirosMap = [
-          { key: 'producao', label: 'Produção' },
-          { key: 'patrocinador', label: 'Patrocínio' },
-          { key: 'apoio_01', label: 'Apoio 01' },
-          { key: 'apoio_02', label: 'Apoio 02' }
-        ];
+          // Mapeamento inverso para compatibilidade com dados puramente friendly
+          const friendlyKeysInverse: Record<string, string> = {
+            'Nome do Evento': 'nome_evento',
+            'Data do Evento': 'data_evento',
+            'Local': 'local',
+            'Endereço': 'localizacao_endereco',
+            'Cidade': 'cidade',
+            'Estado': 'estado',
+            'Hora de Início': 'hora_inicio_evento',
+            'Hora Término': 'hora_termino_evento',
+            'Abertura': 'abertura_portoes',
+            'Instagram': 'insta_evento',
+            'Site': 'site_evento',
+            'Contato': 'contato_info',
+            'Ticketeira': 'ticketeira',
+            'Gênero': 'genero_evento',
+            'Classificação': 'classificacao',
+            'Release': 'release_evento'
+          };
 
-        parceirosMap.forEach(p => {
-          if (cleanData.evento?.[p.label]) {
-            hydrated.evento[p.key] = {
-              ativa: true,
-              nome: cleanData.evento[p.label].nome,
-              logo: cleanData.evento[p.label].logo
-            };
-            // Remover a chave amigável para não sujar o schema interno
-            delete hydrated.evento[p.label];
-          }
-        });
-
-        // Mapeamento inverso amigável do Evento (se necessário)
-        const friendlyKeysInverse: Record<string, string> = {
-          'Nome do Evento': 'nome_evento',
-          'Data do Evento': 'data_evento',
-          'Local': 'local',
-          'Endereço': 'localizacao_endereco',
-          'Cidade': 'cidade',
-          'Estado': 'estado',
-          'Hora de Início': 'hora_inicio_evento',
-          'Hora Término': 'hora_termino_evento',
-          'Abertura': 'abertura_portoes',
-          'Instagram': 'insta_evento',
-          'Site': 'site_evento',
-          'Contato': 'contato_info',
-          'Ticketeira': 'ticketeira',
-          'Gênero': 'genero_evento',
-          'Classificação': 'classificacao',
-          'Release': 'release_evento'
-        };
-
-        Object.entries(friendlyKeysInverse).forEach(([label, key]) => {
-          if (cleanData.evento?.[label] !== undefined) {
-            hydrated.evento[key] = cleanData.evento[label];
-            delete hydrated.evento[label];
-          }
-        });
-
-        // 2. Restaurar Atrações (adicionar ativa: true)
-        if (cleanData.atracoes) {
-          Object.keys(cleanData.atracoes).forEach(key => {
-            if (hydrated.atracoes[key]) {
-              hydrated.atracoes[key].ativa = true;
-              // Restaurar nomes das fotos se houver (o schema usa foto01, o BD usa foto_01)
-              if (cleanData.atracoes[key].foto_01) hydrated.atracoes[key].foto01 = cleanData.atracoes[key].foto_01;
-              if (cleanData.atracoes[key].foto_02) hydrated.atracoes[key].foto02 = cleanData.atracoes[key].foto_02;
+          Object.entries(friendlyKeysInverse).forEach(([label, key]) => {
+            if (sourceEvento[label] !== undefined && sourceEvento[key] === undefined) {
+              const val = sourceEvento[label];
+              
+              // Smart Detect para campos que podem ser "Outro"
+              if (key === 'genero_evento' && val && !['Livre', 'Lounge'].includes(val)) { // Exemplos, Ticketeira é mais fácil
+                 // Se não é um nome padrão conhecido (precisaríamos da lista completa, mas podemos inferir)
+                 // Para Ticketeira e Gênero, se o valor não bate com as opções vindo do banco (que ainda não temos aqui),
+                 // o ideal é ver se temos ticketeira_id/genero_musical_id.
+              }
+              
+              hydrated.evento[key] = val;
             }
           });
-        }
 
-        // 3. Restaurar Complementos (mapeamento inverso de labels)
-        const COMPLEMENTO_LABELS_INV: Record<string, string> = {
-          'Pista': 'info_pista',
-          'Pista Premium/Front Stage': 'info_pista_premium',
-          'Área VIP': 'info_areavip',
-          'Camarote': 'info_camarote',
-          'Camarote Open Bar': 'info_camarote_openbar',
-          'Lounge': 'info_lounge',
-          'Arquibancada': 'info_arquibancada',
-          'Evento Open Bar': 'info_openbar',
-          'Open Food': 'info_openfood',
-          'Mesas': 'info_mesas',
-          'Bistrôs': 'info_bistros',
-          'Mesas Numeradas': 'info_mesas_num',
-          'Camarote Corporativo': 'info_camarote_corp',
-          'Hospitality': 'info_hospitality',
-          'Convidados': 'info_convidados',
-          'Meet & Greet': 'info_meetgreet',
-          'Diferenciais': 'info_diferenciais',
-          'Pontos Físicos': 'info_pontos_fisicos',
-          'Estacionamento': 'info_estacionamento',
-          'Limitações Específicas': 'info_limitacoes',
-          'Acessibilidade': 'info_acessibilidade',
-          'Espaço Área PCD': 'info_area_pcd',
-          'Meia Entrada': 'info_meia_entrada',
-          'Meia Entrada Social': 'info_meia_social',
-        };
+          // Se veio do formato antigo (friendly), e tem um valor que não está nos IDs, marcar como Outra
+          if (hydrated.evento.ticketeira && hydrated.evento.ticketeira !== "Outra" && !hydrated.evento.ticketeira_id) {
+             // Se tem nome de ticketeira mas não tem ID, é provável que seja uma "Outra" do formato antigo
+             hydrated.evento.nome_ticketeira_outra = hydrated.evento.ticketeira;
+             hydrated.evento.ticketeira = "Outra";
+          }
+          if (hydrated.evento.genero_evento && hydrated.evento.genero_evento !== "Outro" && !hydrated.evento.genero_musical_id) {
+             hydrated.evento.genero_evento_outro = hydrated.evento.genero_evento;
+             hydrated.evento.genero_evento = "Outro";
+          }
 
-        if (cleanData.complemento) {
-          Object.entries(cleanData.complemento).forEach(([label, value]) => {
-            const schemaKey = COMPLEMENTO_LABELS_INV[label];
-            if (schemaKey) {
-              hydrated.complemento[schemaKey] = {
+          // Restaurar Parceiros do formato friendly se necessário
+          const parceirosMap = [
+            { key: 'producao', label: 'Produção' },
+            { key: 'patrocinador', label: 'Patrocínio' },
+            { key: 'apoio_01', label: 'Apoio 01' },
+            { key: 'apoio_02', label: 'Apoio 02' }
+          ];
+
+          parceirosMap.forEach(p => {
+            if (sourceEvento[p.label] && !sourceEvento[p.key]?.ativa) {
+              hydrated.evento[p.key] = {
                 ativa: true,
-                descricao: value
+                nome: sourceEvento[p.label].nome || "",
+                logo: sourceEvento[p.label].logo || ""
               };
             }
           });
-        }
 
-        return hydrated;
-      };
+          // Restaurar Atrações (garantir ativa: true)
+          if (cleanData.atracoes) {
+            Object.keys(cleanData.atracoes).forEach(key => {
+              if (hydrated.atracoes[key]) {
+                hydrated.atracoes[key].ativa = true;
+                if (cleanData.atracoes[key].foto_01) hydrated.atracoes[key].foto01 = cleanData.atracoes[key].foto_01;
+                if (cleanData.atracoes[key].foto_02) hydrated.atracoes[key].foto02 = cleanData.atracoes[key].foto_02;
+              }
+            });
+          }
+
+          // Restaurar Complementos
+          const COMPLEMENTO_LABELS_INV: Record<string, string> = {
+            'Pista': 'info_pista',
+            'Pista Premium/Front Stage': 'info_pista_premium',
+            'Área VIP': 'info_areavip',
+            'Camarote': 'info_camarote',
+            'Camarote Open Bar': 'info_camarote_openbar',
+            'Lounge': 'info_lounge',
+            'Arquibancada': 'info_arquibancada',
+            'Evento Open Bar': 'info_openbar',
+            'Open Food': 'info_openfood',
+            'Mesas': 'info_mesas',
+            'Bistrôs': 'info_bistros',
+            'Mesas Numeradas': 'info_mesas_num',
+            'Camarote Corporativo': 'info_camarote_corp',
+            'Hospitality': 'info_hospitality',
+            'Convidados': 'info_convidados',
+            'Meet & Greet': 'info_meetgreet',
+            'Diferenciais': 'info_diferenciais',
+            'Pontos Físicos': 'info_pontos_fisicos',
+            'Estacionamento': 'info_estacionamento',
+            'Limitações Específicas': 'info_limitacoes',
+            'Acessibilidade': 'info_acessibilidade',
+            'Espaço Área PCD': 'info_area_pcd',
+            'Meia Entrada': 'info_meia_entrada',
+            'Meia Entrada Social': 'info_meia_social',
+          };
+
+          if (cleanData.complemento) {
+            Object.entries(cleanData.complemento).forEach(([label, value]) => {
+              const schemaKey = COMPLEMENTO_LABELS_INV[label];
+              if (schemaKey) {
+                hydrated.complemento[schemaKey] = {
+                  ativa: true,
+                  descricao: value
+                };
+              } else if (cleanData.complemento[label]?.ativa) {
+                 // Formato novo (já técnico)
+                 hydrated.complemento[label] = cleanData.complemento[label];
+              }
+            });
+          }
+
+          return hydrated;
+        };
 
       if (submissionData?.data) {
         console.log('Dados de submissão anterior encontrados, restaurando...', submissionData.data);
@@ -273,7 +310,7 @@ export const EventForm = () => {
         try {
           setIsLoading(true);
     
-          // 1. Limpeza de Apoios/Patrocínio no objeto evento
+          // 1. Evento (limpo)
           const cleanEvento: Record<string, any> = {};
           
           // Ordem solicitada para o Evento
@@ -285,35 +322,37 @@ export const EventForm = () => {
           ];
     
           eventoOrder.forEach(key => {
-            if (key === 'genero_evento' && data.evento[key as keyof typeof data.evento] === 'Outro') {
-              cleanEvento['genero'] = data.evento.genero_evento_outro;
-            } else if (key === 'ticketeira' && data.evento[key as keyof typeof data.evento] === 'Outra') {
-              cleanEvento['ticketeira'] = data.evento.nome_ticketeira_outra;
+            // Mapeamento amigável de chaves
+            const friendlyKeys: Record<string, string> = {
+              'nome_evento': 'Nome do Evento',
+              'data_evento': 'Data do Evento',
+              'local': 'Local',
+              'localizacao_endereco': 'Endereço',
+              'cidade': 'Cidade',
+              'estado': 'Estado',
+              'hora_inicio_evento': 'Hora de Início',
+              'hora_termino_evento': 'Hora Término',
+              'abertura_portoes': 'Abertura',
+              'insta_evento': 'Instagram',
+              'site_evento': 'Site',
+              'contato_info': 'Contato',
+              'ticketeira': 'Ticketeira',
+              'genero_evento': 'Gênero',
+              'classificacao': 'Classificação',
+              'release_evento': 'Release'
+            };
+
+            const val = data.evento[key as keyof typeof data.evento];
+            if (key === 'genero_evento' && val === 'Outro') {
+              cleanEvento['Gênero'] = data.evento.genero_evento_outro;
+            } else if (key === 'ticketeira' && val === 'Outra') {
+              cleanEvento['Ticketeira'] = data.evento.nome_ticketeira_outra;
             } else {
-              // Mapeamento amigável de chaves
-              const friendlyKeys: Record<string, string> = {
-                'nome_evento': 'Nome do Evento',
-                'data_evento': 'Data do Evento',
-                'local': 'Local',
-                'localizacao_endereco': 'Endereço',
-                'cidade': 'Cidade',
-                'estado': 'Estado',
-                'hora_inicio_evento': 'Hora de Início',
-                'hora_termino_evento': 'Hora Término',
-                'abertura_portoes': 'Abertura',
-                'insta_evento': 'Instagram',
-                'site_evento': 'Site',
-                'contato_info': 'Contato',
-                'ticketeira': 'Ticketeira',
-                'genero_evento': 'Gênero',
-                'classificacao': 'Classificação',
-                'release_evento': 'Release'
-              };
-              cleanEvento[friendlyKeys[key] || key] = data.evento[key as keyof typeof data.evento];
+              cleanEvento[friendlyKeys[key] || key] = val;
             }
           });
     
-          // Adicionar Produção/Patrocínio/Apoios logo após o release do evento
+          // Adicionar Produção/Patrocínio/Apoios
           const parceiros = [
             { key: 'producao', label: 'Produção' },
             { key: 'patrocinador', label: 'Patrocínio' },
@@ -330,6 +369,13 @@ export const EventForm = () => {
               };
             }
           });
+
+          // PRESERVAR CAMPOS TÉCNICOS PARA HIDRATAÇÃO (IDs e campos de texto extra)
+          cleanEvento['ticketeira_id'] = data.evento.ticketeira_id;
+          cleanEvento['genero_musical_id'] = data.evento.genero_musical_id;
+          cleanEvento['nome_ticketeira_outra'] = data.evento.nome_ticketeira_outra;
+          cleanEvento['logo_ticketeira_outra'] = data.evento.logo_ticketeira_outra;
+          cleanEvento['genero_evento_outro'] = data.evento.genero_evento_outro;
     
           // 2. Atrações com ordem de links corrigida
           const cleanAtracoes: Record<string, any> = {};

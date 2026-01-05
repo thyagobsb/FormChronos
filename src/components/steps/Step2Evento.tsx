@@ -330,7 +330,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
               error={errors.evento?.classificacao?.message}
             >
               <Select onValueChange={(v) => setValue("evento.classificacao", v, { shouldValidate: true })} value={watch("evento.classificacao")}>
-                <SelectTrigger disabled={watch("complemento.info_openbar.ativa" as any)}>
+                <SelectTrigger disabled={!!watch("complemento.info_openbar.ativa" as any)}>
                   <SelectValue placeholder="Selecione a idade..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -384,7 +384,10 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <h4 className="font-medium text-sm">Produção</h4>
                 <Switch 
                   checked={watch("evento.producao.ativa")} 
-                  onCheckedChange={(val) => setValue("evento.producao.ativa", val, { shouldValidate: true })} 
+                  onCheckedChange={(val) => {
+                    setValue("evento.producao.ativa", val, { shouldValidate: true });
+                    form.trigger("evento.producao");
+                  }} 
                 />
               </div>
               {watch("evento.producao.ativa") && (
@@ -421,6 +424,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                   checked={watch("evento.patrocinador.ativa")} 
                   onCheckedChange={(val) => {
                     setValue("evento.patrocinador.ativa", val, { shouldValidate: true });
+                    form.trigger("evento.patrocinador");
                   }} 
                 />
               </div>
@@ -460,6 +464,7 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                   checked={watch("evento.apoio_01.ativa")} 
                   onCheckedChange={(val) => {
                     setValue("evento.apoio_01.ativa", val, { shouldValidate: true });
+                    form.trigger("evento.apoio_01");
                     if (!val) {
                       setValue("evento.apoio_02.ativa", false, { shouldValidate: true });
                     }
@@ -499,7 +504,10 @@ export const Step2Evento: React.FC<Step2Props> = ({ form }) => {
                 <Switch 
                   checked={watch("evento.apoio_02.ativa")} 
                   disabled={!watch("evento.apoio_01.ativa")}
-                  onCheckedChange={(val) => setValue("evento.apoio_02.ativa", val, { shouldValidate: true })} 
+                  onCheckedChange={(val) => {
+                    setValue("evento.apoio_02.ativa", val, { shouldValidate: true });
+                    form.trigger("evento.apoio_02");
+                  }} 
                 />
               </div>
               {watch("evento.apoio_02.ativa") && (
