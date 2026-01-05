@@ -405,13 +405,17 @@ export const AdminPage = () => {
                     return (
                       <TableRow key={sub.id}>
                         <TableCell>
-                          <div className="font-medium text-sm">{eventData.evento?.nome_evento || "Sem nome"}</div>
+                          <div className="font-medium text-sm">
+                            {eventData.evento?.['Nome do Evento'] || eventData.evento?.nome_evento || "Sem nome"}
+                          </div>
                           <div className="text-xs text-muted-foreground">
-                             {eventData.evento?.cidade ? `${eventData.evento.cidade}/${eventData.evento.state || eventData.evento.estado}` : '-'}
+                             {eventData.evento?.['Cidade'] || eventData.evento?.cidade ? 
+                               `${eventData.evento?.['Cidade'] || eventData.evento?.cidade}/${eventData.evento?.['Estado'] || eventData.evento?.estado || eventData.evento?.state || ''}` : '-'}
                           </div>
                         </TableCell>
                         <TableCell>
-                          {eventData.evento?.data_evento ? new Date(eventData.evento.data_evento + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
+                          {(eventData.evento?.['Data do Evento'] || eventData.evento?.data_evento) ? 
+                            new Date((eventData.evento?.['Data do Evento'] || eventData.evento?.data_evento) + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}
                         </TableCell>
                         <TableCell className="font-medium">
                           {new Date(sub.submitted_at).toLocaleDateString()}
