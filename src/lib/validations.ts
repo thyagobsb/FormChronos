@@ -101,7 +101,7 @@ const areaItemSchema = z.object({
   path: ["descricao"]
 });
 
-export const areasSchema = z.object({
+export const complementoSchema = z.object({
   info_pista: areaItemSchema,
   info_pista_premium: areaItemSchema,
   info_areavip: areaItemSchema,
@@ -131,10 +131,10 @@ export const areasSchema = z.object({
 export const formSchema = z.object({
   evento: eventoSchema,
   atracoes: atracaosSchema,
-  areas: areasSchema.optional(),
+  complemento: complementoSchema.optional(),
   linha_visual: linhaVisualSchema,
 }).refine(data => {
-  if (data.areas?.info_openbar?.ativa && data.evento?.classificacao !== "18+") {
+  if (data.complemento?.info_openbar?.ativa && data.evento?.classificacao !== "18+") {
     return false;
   }
   return true;

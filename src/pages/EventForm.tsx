@@ -48,11 +48,15 @@ export const EventForm = () => {
         estado: "",
       },
       linha_visual: {},
-      areas: {}
+      complemento: {}
     }
   });
 
   const { status: saveStatus } = useFormPersistence(form, token || 'default');
+
+  useEffect(() => {
+    document.title = "FormChronos";
+  }, []);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -109,7 +113,7 @@ export const EventForm = () => {
     let fieldsToValidate: any[] = [];
     if (currentStep === 0) fieldsToValidate = ["evento"];
     if (currentStep === 1) fieldsToValidate = ["atracoes"];
-    if (currentStep === 2) fieldsToValidate = ["areas"];
+    if (currentStep === 2) fieldsToValidate = ["complemento"];
     if (currentStep === 3) fieldsToValidate = ["linha_visual"];
     
     const isValid = await form.trigger(fieldsToValidate as any);
@@ -135,13 +139,70 @@ export const EventForm = () => {
     try {
       setIsLoading(true);
 
+      // Mapeamento de nomes amigáveis para o complemento
+      const COMPLEMENTO_LABELS: Record<string, string> = {
+        info_pista: 'Pista',
+        info_pista_premium: 'Pista Premium/Front Stage',
+        info_areavip: 'Área VIP',
+        info_camarote: 'Camarote',
+        info_camarote_openbar: 'Camarote Open Bar',
+        info_lounge: 'Lounge',
+        info_arquibancada: 'Arquibancada',
+        info_openbar: 'Evento Open Bar',
+        info_openfood: 'Open Food',
+        info_mesas: 'Mesas',
+        info_bistros: 'Bistrôs',
+        info_mesas_num: 'Mesas Numeradas',
+        info_camarote_corp: 'Camarote Corporativo',
+        info_hospitality: 'Hospitality',
+        info_convidados: 'Convidados',
+        info_meetgreet: 'Meet & Greet',
+        info_diferenciais: 'Diferenciais',
+        info_pontos_fisicos: 'Pontos Físicos',
+        info_estacionamento: 'Estacionamento',
+        info_limitacoes: 'Limitações Específicas',
+        info_acessibilidade: 'Acessibilidade',
+        info_area_pcd: 'Espaço Área PCD',
+        info_meia_entrada: 'Meia Entrada',
+        info_meia_social: 'Meia Entrada Social',
+      };
+
+      // Limpeza e Ordenação do JSON
+      const cleanComplemento: Record<string, any> = {};
+      if (data.complemento) {
+        Object.entries(data.complemento).forEach(([key, value]: [string, any]) => {
+          if (value?.ativa) {
+            cleanComplemento[key] = {
+              nome: COMPLEMENTO_LABELS[key] || key,
+              descricao: value.descricao
+            };
+          }
+        });
+      }
+
+      const cleanAtracoes: Record<string, any> = {};
+      Object.entries(data.atracoes).forEach(([key, value]: [string, any]) => {
+        if (key === 'atracao_01' || value?.ativa) {
+          const { ativa, ...rest } = value;
+          cleanAtracoes[key] = rest;
+        }
+      });
+
+      // Objeto final na ordem desejada
+      const finalData = {
+        evento: data.evento,
+        atracoes: cleanAtracoes,
+        complemento: cleanComplemento,
+        linha_visual: data.linha_visual
+      };
+
       // 1. Salvar no Supabase (Histórico)
-      console.log('Salvando no Supabase...'); // LOG
+      console.log('Salvando no Supabase...', finalData); // LOG
       const { error: dbError } = await supabase
         .from('event_submissions')
         .insert([{
           token,
-          data,
+          data: finalData,
           submitted_at: new Date().toISOString(),
           genero_musical_id: data.evento.genero_musical_id,
           ticketeira_id: data.evento.ticketeira_id
@@ -483,18 +544,45 @@ export const EventForm = () => {
 
                             {/* 4. ÁREAS E BENEFÍCIOS */}
                             <div className="space-y-4">
-                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Áreas e Benefícios</h4>
+                              <h4 className="font-medium text-sm uppercase text-primary tracking-wider border-b border-border/50 pb-2">Complemento</h4>
                               <div className="grid grid-cols-1 gap-3">
-                                {!Object.entries(form.getValues("areas") || {}).some(([_, v]) => (v as any)?.ativa) ? (
+                                {!Object.entries(form.getValues("complemento") || {}).some(([_, v]) => (v as any)?.ativa) ? (
                                   <div className="bg-background/50 p-4 rounded-lg border border-border/30 text-center italic text-muted-foreground text-sm">
                                     Nenhum item adicionado.
                                   </div>
                                 ) : (
-                                  Object.entries(form.getValues("areas") || {}).map(([areaId, value]) => {
+                                  Object.entries(form.getValues("complemento") || {}).map(([areaId, value]) => {
                                       const area = value as any;
                                       if (!area?.ativa) return null;
                                       
-                                      const label = areaId.replace('info_', '').replace(/_/g, ' ').toUpperCase();
+                                      const COMPLEMENTO_LABELS: Record<string, string> = {
+                                        info_pista: 'Pista',
+                                        info_pista_premium: 'Pista Premium',
+                                        info_areavip: 'Área VIP',
+                                        info_camarote: 'Camarote',
+                                        info_camarote_openbar: 'Camarote Open Bar',
+                                        info_lounge: 'Lounge',
+                                        info_arquibancada: 'Arquibancada',
+                                        info_openbar: 'Evento Open Bar',
+                                        info_openfood: 'Open Food',
+                                        info_mesas: 'Mesas',
+                                        info_bistros: 'Bistrôs',
+                                        info_mesas_num: 'Mesas Numeradas',
+                                        info_camarote_corp: 'Camarote Corporativo',
+                                        info_hospitality: 'Hospitality',
+                                        info_convidados: 'Convidados',
+                                        info_meetgreet: 'Meet & Greet',
+                                        info_diferenciais: 'Diferenciais',
+                                        info_pontos_fisicos: 'Pontos Físicos',
+                                        info_estacionamento: 'Estacionamento',
+                                        info_limitacoes: 'Limitações Específicas',
+                                        info_acessibilidade: 'Acessibilidade',
+                                        info_area_pcd: 'Espaço Área PCD',
+                                        info_meia_entrada: 'Meia Entrada',
+                                        info_meia_social: 'Meia Entrada Social',
+                                      };
+                                      
+                                      const label = COMPLEMENTO_LABELS[areaId] || areaId.replace('info_', '').replace(/_/g, ' ').toUpperCase();
                                       return (
                                         <div key={areaId} className="flex flex-col gap-1.5 bg-background/50 p-4 rounded-lg border border-border/30">
                                           <span className="text-muted-foreground text-[12px] uppercase font-medium tracking-tight">{label}</span>

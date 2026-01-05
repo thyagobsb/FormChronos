@@ -59,6 +59,7 @@ export const AdminPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "FormChronos Admin";
     fetchSubmissions();
     fetchTokens();
     fetchRefs();

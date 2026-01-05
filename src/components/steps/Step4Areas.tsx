@@ -44,14 +44,14 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
   const { register, setValue, control, formState: { errors } } = form;
 
   // Usar useWatch global para a lista, mas as atualizações individuais serão tratadas com cuidado
-  const areasValues = (useWatch({
+  const complementoValues = (useWatch({
     control,
-    name: "areas"
+    name: "complemento"
   }) || {}) as any;
 
   const toggleArea = (id: string, currentStatus: boolean) => {
     const newVal = !currentStatus;
-    setValue(`areas.${id}.ativa` as any, newVal, { shouldDirty: true });
+    setValue(`complemento.${id}.ativa` as any, newVal, { shouldDirty: true });
     
     if (id === 'info_openbar' && newVal) {
       setValue("evento.classificacao", "18+", { shouldDirty: true });
@@ -73,8 +73,8 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
 
       <div className="grid grid-cols-1 gap-4">
         {AREA_ITEMS.map((item) => {
-          const isActive = !!areasValues[item.id]?.ativa;
-          const hasError = (errors.areas as any)?.[item.id]?.descricao;
+          const isActive = !!complementoValues[item.id]?.ativa;
+          const hasError = (errors.complemento as any)?.[item.id]?.descricao;
 
           return (
             <Card 
@@ -131,10 +131,11 @@ export const Step4Areas: React.FC<Step4Props> = ({ form }) => {
                       label={`Benefícios e Detalhes - ${item.label}`}
                       error={hasError?.message}
                     >
+                      <span className="sr-only" id={`label-${item.id}`}>{item.label}</span>
                       <Textarea 
-                        {...register(`areas.${item.id}.descricao` as any)} 
+                        {...register(`complemento.${item.id}.descricao` as any)} 
                         placeholder={`Descreva o que está incluso no(a) ${item.label.toLowerCase()}...`} 
-                        className={cn(
+                        aria-labelledby={`label-${item.id}`}                        className={cn(
                           "resize-none h-24 text-xs transition-all focus:h-32",
                           hasError ? "border-destructive/50 bg-destructive/5" : "bg-background/80"
                         )}
